@@ -14,6 +14,7 @@ import * as coachJobs from './coach/jobs.js';
 import { coachRoutes } from './coach/routes.js';
 import { startCadence } from './coach/cadence.js';
 import { trainerRoutes } from './trainer/routes.js';
+import { dietRoutes } from './diet/routes.js';
 
 const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
@@ -566,7 +567,10 @@ const routes = {
   ...coachRoutes({ json, readBody, readSession, requireAdmin }),
 
   /* ---------- EM Fitness: trainer assigns routines ---------- */
-  ...trainerRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush })
+  ...trainerRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush }),
+
+  /* ---------- EM Fitness: trainer sends diets ---------- */
+  ...dietRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush })
 };
 
 /* ---------- Coach: boot recovery, notifications, scheduled reviews ---------- */
