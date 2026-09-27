@@ -707,4 +707,7 @@ export default {
   '{0}: rep-range floor': '{0}: tekrar aralığı alt sınırı',
   '{0}: reps': '{0}: tekrar',
   '{0}: sets': '{0}: set',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': 'Antrenörün planını güncelledi',
+  'From your trainer': 'Antrenöründen',
 }

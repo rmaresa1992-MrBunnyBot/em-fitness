@@ -707,4 +707,7 @@ export default {
   '{0}: rep-range floor': '{0}：次数区间下限',
   '{0}: reps': '{0}：次数',
   '{0}: sets': '{0}：组数',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': '你的教练更新了你的计划',
+  'From your trainer': '来自你的教练',
 }

@@ -725,4 +725,7 @@ export default {
   '{0}: rep-range floor': '{0}: Untergrenze des Wiederholungsbereichs',
   '{0}: reps': '{0}: Wiederholungen',
   '{0}: sets': '{0}: Sätze',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': 'Dein Trainer hat deinen Plan aktualisiert',
+  'From your trainer': 'Von deinem Trainer',
 }

@@ -32,7 +32,7 @@ const Assign = z.object({
   routine: z.object({
     id,
     name: z.string().trim().min(1).max(60),
-    emoji: z.string().max(16).optional(),
+    emoji: z.string().max(40).optional(),   // a glyph key (lib/glyphs.js) or a legacy emoji
     prog: z.enum(POLICIES).optional(),
     ex: z.array(Exercise).min(1).max(40)
   }),

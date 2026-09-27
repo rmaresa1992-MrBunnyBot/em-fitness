@@ -707,4 +707,7 @@ export default {
   '{0}: rep-range floor': '{0}: रेप-रेंज की न्यूनतम सीमा',
   '{0}: reps': '{0}: रेप्स',
   '{0}: sets': '{0}: सेट',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': 'आपके ट्रेनर ने आपकी योजना अपडेट की',
+  'From your trainer': 'आपके ट्रेनर से',
 }

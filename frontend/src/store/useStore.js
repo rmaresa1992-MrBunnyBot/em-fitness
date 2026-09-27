@@ -4,6 +4,7 @@ import { localTZ } from '../lib/format.js'
 import { registerCustom } from '../lib/exercises.js'
 import { DEMO, DEMO_SEEDED } from '../lib/demo.js'
 import { MOBILE, nativeLoad, nativeSave, syncReminder } from '../lib/mobile.js'
+import { applyAssignments } from '../lib/trainer.js'
 
 const KEY = 'gym_state_v1'
 export const DEF = {
@@ -60,6 +61,13 @@ export const useStore = create((set, get) => {
   // (e.g. setting the reminder time then immediately backgrounding to test it). On mobile the
   // same applies to the file mirror — backgrounding is often the last thing before the OS
   // kills the app.
+  // EM Fitness: coming back to the app is when a routine the trainer just assigned should show
+  // up. At most once a minute, so flicking between apps doesn't hammer the server.
+  let trainerAt = 0
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - trainerAt > 60000) get().syncTrainer()
+  })
+
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') return
     if (MOBILE && saveTm) {
@@ -127,6 +135,25 @@ export const useStore = create((set, get) => {
           persist(next, false)
         } else if (hasData(S)) { await get().pushState() }
       } catch (e) { /* offline — keep local */ }
+      // After the pull, never before: applying onto a state the pull then replaces would lose it.
+      await get().syncTrainer()
+    },
+
+    // EM Fitness: pull the trainer's assignments and apply them (lib/trainer.js). Persists —
+    // and so syncs — only when something actually changed.
+    async syncTrainer() {
+      if (!get().user) return
+      trainerAt = Date.now()
+      let assignments
+      try { ({ assignments } = await api('/api/athlete/assignments')) } catch (e) { return }
+      const S = clone(get().S)
+      const n = applyAssignments(S, assignments)
+      if (!n && JSON.stringify(S.trainer) === JSON.stringify(get().S.trainer)) return
+      persist(S)
+      if (n) {
+        const [{ useUI }, { t }] = await Promise.all([import('./useUI.js'), import('../lib/i18n.js')])
+        useUI.getState().toast(t('Your trainer updated your plan'))
+      }
     },
 
     async signOut() {

@@ -707,4 +707,7 @@ export default {
   '{0}: rep-range floor': '{0}: 횟수 범위 하한',
   '{0}: reps': '{0}: 횟수',
   '{0}: sets': '{0}: 세트',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': '트레이너가 플랜을 업데이트했어요',
+  'From your trainer': '트레이너 배정',
 }

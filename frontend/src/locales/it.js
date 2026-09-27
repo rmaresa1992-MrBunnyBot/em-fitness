@@ -707,4 +707,7 @@ export default {
   '{0}: rep-range floor': '{0}: minimo del range di ripetizioni',
   '{0}: reps': '{0}: ripetizioni',
   '{0}: sets': '{0}: serie',
+  // EM Fitness: trainer-assigned routines
+  'Your trainer updated your plan': 'Il tuo allenatore ha aggiornato il tuo piano',
+  'From your trainer': 'Dal tuo allenatore',
 }
