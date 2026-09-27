@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': 'Тренер обновил ваш план',
   'From your trainer': 'От вашего тренера',
+  // EM Fitness: diets
+  "Diet": "Питание",
+  "Your trainer hasn’t sent you a diet yet.": "Тренер ещё не прислал вам план питания.",
+  "Updated {0}": "Обновлено {0}",
+  "Daily total": "Итого за день",
+  "Protein": "Белки",
+  "Carbs": "Углеводы",
+  "Fat": "Жиры",
+  "Some foods have no macros, so the totals are approximate.": "У некоторых продуктов нет КБЖУ, поэтому итоги приблизительные.",
+  "Trainer’s notes": "Заметки тренера",
+  "Your trainer updated your diet": "Тренер обновил ваш план питания",
 }

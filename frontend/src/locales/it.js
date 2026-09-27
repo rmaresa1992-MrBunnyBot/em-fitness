@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': 'Il tuo allenatore ha aggiornato il tuo piano',
   'From your trainer': 'Dal tuo allenatore',
+  // EM Fitness: diets
+  "Diet": "Dieta",
+  "Your trainer hasn’t sent you a diet yet.": "Il tuo allenatore non ti ha ancora inviato una dieta.",
+  "Updated {0}": "Aggiornata {0}",
+  "Daily total": "Totale del giorno",
+  "Protein": "Proteine",
+  "Carbs": "Carboidrati",
+  "Fat": "Grassi",
+  "Some foods have no macros, so the totals are approximate.": "Alcuni alimenti non hanno macro, quindi i totali sono approssimativi.",
+  "Trainer’s notes": "Note dell'allenatore",
+  "Your trainer updated your diet": "Il tuo allenatore ha aggiornato la tua dieta",
 }

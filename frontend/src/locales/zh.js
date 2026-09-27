@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': '你的教练更新了你的计划',
   'From your trainer': '来自你的教练',
+  // EM Fitness: diets
+  "Diet": "饮食",
+  "Your trainer hasn’t sent you a diet yet.": "你的教练还没有给你发送饮食计划。",
+  "Updated {0}": "更新于 {0}",
+  "Daily total": "每日总计",
+  "Protein": "蛋白质",
+  "Carbs": "碳水",
+  "Fat": "脂肪",
+  "Some foods have no macros, so the totals are approximate.": "部分食物没有宏量营养数据，因此总计为估算值。",
+  "Trainer’s notes": "教练备注",
+  "Your trainer updated your diet": "你的教练更新了你的饮食计划",
 }

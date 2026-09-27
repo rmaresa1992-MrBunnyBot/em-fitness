@@ -32,6 +32,15 @@ function loadState() {
   return clone(DEF)
 }
 
+const DIET_KEY = 'emf_diet'
+function loadDiet() {
+  try {
+    const user = JSON.parse(localStorage.getItem('gym_user'))
+    const saved = JSON.parse(localStorage.getItem(DIET_KEY))
+    return user && saved && saved.uid === user.id ? saved.diet : null
+  } catch (e) { return null }
+}
+
 const hasData = st => !!((st.workouts || []).length || (st.routines || []).length || (st.bodyweight || []).length)
 
 export const useStore = create((set, get) => {
@@ -57,17 +66,17 @@ export const useStore = create((set, get) => {
     }
   }
 
-  // A setting changed right before switching away/closing the tab must not get lost mid-debounce
-  // (e.g. setting the reminder time then immediately backgrounding to test it). On mobile the
-  // same applies to the file mirror — backgrounding is often the last thing before the OS
-  // kills the app.
-  // EM Fitness: coming back to the app is when a routine the trainer just assigned should show
-  // up. At most once a minute, so flicking between apps doesn't hammer the server.
+  // EM Fitness: coming back to the app is when a routine or diet the trainer just sent should
+  // show up. At most once a minute, so flicking between apps doesn't hammer the server.
   let trainerAt = 0
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && Date.now() - trainerAt > 60000) get().syncTrainer()
   })
 
+  // A setting changed right before switching away/closing the tab must not get lost mid-debounce
+  // (e.g. setting the reminder time then immediately backgrounding to test it). On mobile the
+  // same applies to the file mirror — backgrounding is often the last thing before the OS
+  // kills the app.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') return
     if (MOBILE && saveTm) {
@@ -88,6 +97,8 @@ export const useStore = create((set, get) => {
     localStorage.removeItem('gym_guest')
     localStorage.removeItem('gym_dirty')
     localStorage.removeItem(KEY)
+    localStorage.removeItem(DIET_KEY)
+    set({ diet: null })
     persist(clone(DEF), false)
   }
 
@@ -99,6 +110,9 @@ export const useStore = create((set, get) => {
     // owner has both enabled the Coach and connected a provider — every Coach entry point in
     // the app hangs off it, so an unconfigured instance renders exactly what it always did.
     config: null,
+    // EM Fitness: the diet the trainer sent, or null. Not part of S — it's read-only and written
+    // by someone else (see lib/diet.js). Offline copy in localStorage, tagged with its owner.
+    diet: loadDiet(),
 
     // Mutate a draft of S via producer fn, then persist + schedule sync.
     update(mut, push = true) {
@@ -144,6 +158,7 @@ export const useStore = create((set, get) => {
     async syncTrainer() {
       if (!get().user) return
       trainerAt = Date.now()
+      await get().syncDiet()
       let assignments
       try { ({ assignments } = await api('/api/athlete/assignments')) } catch (e) { return }
       const S = clone(get().S)
@@ -153,6 +168,27 @@ export const useStore = create((set, get) => {
       if (n) {
         const [{ useUI }, { t }] = await Promise.all([import('./useUI.js'), import('../lib/i18n.js')])
         useUI.getState().toast(t('Your trainer updated your plan'))
+      }
+    },
+
+    // EM Fitness: fetch the current diet. Offline or failing → keep the copy we have.
+    async syncDiet() {
+      const user = get().user
+      if (!user) return
+      let diet
+      try { ({ diet } = await api('/api/athlete/diet')) } catch (e) { return }
+      const prev = get().diet
+      if ((prev?.rev || 0) === (diet?.rev || 0) && !!prev === !!diet) return
+      set({ diet: diet || null })
+      try {
+        if (diet) localStorage.setItem(DIET_KEY, JSON.stringify({ uid: user.id, diet }))
+        else localStorage.removeItem(DIET_KEY)
+      } catch (e) { /* storage full — the in-memory copy still shows */ }
+      // Only a change to a diet already known here: on a fresh sign-in the diet may be weeks old,
+      // and a first diet is announced by its push and by the Diet tab appearing.
+      if (diet && prev) {
+        const [{ useUI }, { t }] = await Promise.all([import('./useUI.js'), import('../lib/i18n.js')])
+        useUI.getState().toast(t('Your trainer updated your diet'))
       }
     },
 

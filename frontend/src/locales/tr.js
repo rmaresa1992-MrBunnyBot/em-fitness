@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': 'Antrenörün planını güncelledi',
   'From your trainer': 'Antrenöründen',
+  // EM Fitness: diets
+  "Diet": "Diyet",
+  "Your trainer hasn’t sent you a diet yet.": "Antrenörün sana henüz bir diyet göndermedi.",
+  "Updated {0}": "{0} güncellendi",
+  "Daily total": "Günlük toplam",
+  "Protein": "Protein",
+  "Carbs": "Karbonhidrat",
+  "Fat": "Yağ",
+  "Some foods have no macros, so the totals are approximate.": "Bazı besinlerin makroları yok, bu yüzden toplamlar yaklaşıktır.",
+  "Trainer’s notes": "Antrenörünün notları",
+  "Your trainer updated your diet": "Antrenörün diyetini güncelledi",
 }

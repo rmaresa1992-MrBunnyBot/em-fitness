@@ -11,6 +11,7 @@ export default function TabBar({ onStart }) {
   const S = useStore(s => s.S)
   const user = useStore(s => s.user)
   const isGuest = useStore(s => s.isGuest())
+  const hasDiet = useStore(s => !!s.diet)   // EM Fitness: the Diet tab exists only once there is one
   if (!user && !isGuest) return null
   const cur = loc.pathname.split('/')[1] || 'home'
   const on = k => cur === k || (cur === 'history' && k === 'stats') || (cur === 'settings' && k === 'home')
@@ -32,6 +33,7 @@ export default function TabBar({ onStart }) {
     <nav id="tabbar">
       <Tab k="home" icon="house" to="/home" label={t('Home')} />
       <Tab k="plan" icon="calendar" to="/plan" label={t('Plan')} />
+      {hasDiet && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
       <button className={'start' + (S.active ? ' rec' : '')} onClick={startWorkout}>
         <span className="cir"><Icon name={S.active ? 'play' : 'dumbbell'} /></span>
         <span>{S.active ? t('Resume') : t('Start')}</span>

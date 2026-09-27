@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': '트레이너가 플랜을 업데이트했어요',
   'From your trainer': '트레이너 배정',
+  // EM Fitness: diets
+  "Diet": "식단",
+  "Your trainer hasn’t sent you a diet yet.": "트레이너가 아직 식단을 보내지 않았어요.",
+  "Updated {0}": "{0} 업데이트",
+  "Daily total": "하루 합계",
+  "Protein": "단백질",
+  "Carbs": "탄수화물",
+  "Fat": "지방",
+  "Some foods have no macros, so the totals are approximate.": "일부 음식에 매크로가 없어 합계는 대략적인 값이에요.",
+  "Trainer’s notes": "트레이너 메모",
+  "Your trainer updated your diet": "트레이너가 식단을 업데이트했어요",
 }

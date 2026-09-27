@@ -710,4 +710,15 @@ export default {
   // EM Fitness: trainer-assigned routines
   'Your trainer updated your plan': 'आपके ट्रेनर ने आपकी योजना अपडेट की',
   'From your trainer': 'आपके ट्रेनर से',
+  // EM Fitness: diets
+  "Diet": "डाइट",
+  "Your trainer hasn’t sent you a diet yet.": "आपके ट्रेनर ने अभी तक आपको डाइट नहीं भेजी है।",
+  "Updated {0}": "अपडेट {0}",
+  "Daily total": "दिन का कुल",
+  "Protein": "प्रोटीन",
+  "Carbs": "कार्ब्स",
+  "Fat": "वसा",
+  "Some foods have no macros, so the totals are approximate.": "कुछ खाद्य पदार्थों में मैक्रो नहीं हैं, इसलिए कुल अनुमानित है।",
+  "Trainer’s notes": "आपके ट्रेनर के नोट्स",
+  "Your trainer updated your diet": "आपके ट्रेनर ने आपकी डाइट अपडेट की",
 }
