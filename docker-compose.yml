@@ -1,4 +1,4 @@
-name: opengym
+name: em-fitness
 
 services:
   # One-time: download the exercise images + GIFs into ./media (skipped if already there).
@@ -22,9 +22,10 @@ services:
     restart: "no"
 
   # Passkey auth + per-user data (Node, no framework).
-  # image: prebuilt (docker compose pull). build: from source (docker compose up --build).
+  # Built from this fork's source (docker compose up --build); the tag is local on purpose so
+  # compose never pulls the upstream image, which lacks EM Fitness changes.
   api:
-    image: ghcr.io/duartesantos8/opengym-api:latest
+    image: em-fitness-api:local
     build: ./api
     restart: unless-stopped
     env_file: .env
@@ -41,7 +42,7 @@ services:
   # Builds the React frontend (multi-stage) and serves it, proxying /api → api
   # and the exercise media from the shared volume. Single origin for passkeys.
   web:
-    image: ghcr.io/duartesantos8/opengym-web:latest
+    image: em-fitness-web:local
     build:
       context: .
       dockerfile: web/Dockerfile
