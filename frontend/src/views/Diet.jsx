@@ -13,7 +13,7 @@ function Bar({ value }) {
   if (value == null) return null
   const over = value > 1.05
   return <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-2)', overflow: 'hidden', marginTop: 6 }}>
-    <div style={{ width: Math.min(100, value * 100) + '%', height: '100%', borderRadius: 3, background: over ? 'var(--orange, var(--red))' : 'var(--acc)', transition: 'width .4s ease' }} />
+    <div style={{ width: Math.min(100, value * 100) + '%', height: '100%', borderRadius: 3, background: over ? 'var(--red)' : 'var(--acc-fill, var(--acc))', transition: 'width .4s ease' }} />
   </div>
 }
 

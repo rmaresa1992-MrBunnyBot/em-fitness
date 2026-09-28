@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "Certains aliments n'ont pas de macros, les totaux sont donc approximatifs.",
   "Trainer’s notes": "Notes de ton entraîneur",
   "Your trainer updated your diet": "Ton entraîneur a mis à jour ton plan alimentaire",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "ton empreinte ou le déverrouillage facial",
+  "your fingerprint, face or PIN": "ton empreinte, ton visage ou ton code PIN",
 }

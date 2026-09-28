@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "Bazı besinlerin makroları yok, bu yüzden toplamlar yaklaşıktır.",
   "Trainer’s notes": "Antrenörünün notları",
   "Your trainer updated your diet": "Antrenörün diyetini güncelledi",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "parmak izi veya yüz tanıma",
+  "your fingerprint, face or PIN": "parmak izin, yüzün veya PIN kodun",
 }

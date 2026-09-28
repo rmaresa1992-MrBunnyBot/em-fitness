@@ -105,7 +105,7 @@ export default function Settings() {
     <Section title={t('General')} footer={t('Note: switching units only changes the label — logged numbers are not converted.')}>
       <SelectRow
         icon="globe" iconTint="var(--blue)" title={t('Language')}
-        value={S.lang || 'en'} onChange={v => update(s => { s.lang = v })}
+        value={S.lang || 'es'} onChange={v => update(s => { s.lang = v })}
         options={Object.entries(LANGS).map(([k, name]) => ({
           value: k, label: name,
           subtitle: INSTR_LANGS.includes(k) ? null : t("Exercise instructions aren't available in this language yet — they stay in English."),
@@ -178,7 +178,7 @@ export default function Settings() {
         <span className="lrow-t">{t('Accent color')}</span>
         <div className="swatches">
           {Object.entries(ACCENTS).map(([k, c]) => (
-            <button key={k} className={'swatch' + ((S.accent || 'lime') === k ? ' on' : '')}
+            <button key={k} className={'swatch' + ((S.accent || 'em') === k ? ' on' : '')}
               style={{ background: c }} onClick={() => update(s => { s.accent = k })} aria-label={k} />
           ))}
         </div>

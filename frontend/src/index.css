@@ -62,11 +62,13 @@
 }
 
 :root[data-theme="light"] {
-  --bg:        #f2f2f7;
-  --bg-el:     #f7f7fa;
+  /* EM Fitness: a warm off-white instead of the cool iOS grey — reads as paper, not as a
+     settings screen, and keeps the graphite/orange brand from looking clinical. */
+  --bg:        #f5f5f3;
+  --bg-el:     #fafaf8;
   --surface:   #ffffff;
-  --surface-2: #ececef;
-  --surface-3: #e3e3e8;
+  --surface-2: #eeeeeb;
+  --surface-3: #e4e4e0;
 
   --label:     #000000;
   --label-2:   rgba(60,60,67,.60);
@@ -92,6 +94,13 @@
 :root[data-accent="red"]   { --acc:var(--red);    --acc-2:#d70015; --on-acc:#fff }
 :root[data-accent="teal"]  { --acc:var(--teal);   --acc-2:#0071a4; --on-acc:#000 }
 :root[data-accent="gold"]  { --acc:var(--yellow); --acc-2:#b25000; --on-acc:#000 }
+/* EM Fitness brand: graphite for the primary action, orange for everything that is merely
+   "accented". Two oranges on purpose: #F26B1D is the brand orange but only 3.05:1 on white, so
+   it fills (bars, soft backgrounds) while text and icons use the burnt #C94A0C (4.70:1 on
+   white). --ink only exists on this accent; the rules that use it fall back to --acc, so the
+   other accents behave exactly as before. On the dark theme the graphite inverts to off-white. */
+:root[data-accent="em"] { --acc:#ff8a3d; --acc-2:#f26b1d; --on-acc:#000; --acc-fill:#f26b1d; --ink:#f5f5f3; --ink-2:#d9d9d4; --on-ink:#16181d }
+:root[data-theme="light"][data-accent="em"] { --acc:#c94a0c; --acc-2:#a63d09; --on-acc:#fff; --acc-fill:#f26b1d; --ink:#1c1c1e; --ink-2:#3a3a3c; --on-ink:#fff; --label:#16181d }
 /* Label colour on a filled accent button is picked per accent by measured contrast,
    not by taste. Button text is 17px/600, so the AA bar is 3:1 (large text). White on
    the light-theme green is 2.22:1 and on teal 2.57:1 — both fail, and green is the
@@ -256,8 +265,8 @@ h4.sec{
 }
 .btn .icn{font-size:19px}
 .btn:active{transform:scale(.975)}
-.btn.primary{background:var(--acc);color:var(--on-acc)}
-.btn.primary:active{background:var(--acc-2)}
+.btn.primary{background:var(--ink,var(--acc));color:var(--on-ink,var(--on-acc))}
+.btn.primary:active{background:var(--ink-2,var(--acc-2))}
 .btn.tinted{background:var(--acc-soft);color:var(--acc)}
 .btn.danger{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
 .btn.ghost,.btn.plain{background:none;color:var(--acc);font-weight:400}
@@ -292,19 +301,19 @@ h4.sec{
 #tabbar button.on .icn{--icon-stroke:2;color:inherit;opacity:1}
 #tabbar button.start{margin-top:-24px}
 #tabbar button.start .cir{
-  width:52px;height:52px;border-radius:50%;background:var(--acc);color:var(--on-acc);
+  width:52px;height:52px;border-radius:50%;background:var(--ink,var(--acc));color:var(--on-ink,var(--on-acc));
   display:flex;align-items:center;justify-content:center;position:relative;
-  box-shadow:0 6px 18px -4px color-mix(in srgb,var(--acc) 55%,transparent);
+  box-shadow:0 6px 18px -4px color-mix(in srgb,var(--ink,var(--acc)) 55%,transparent);
   transition:transform var(--fast) var(--ease);
 }
 #tabbar button.start:active .cir{transform:scale(.93)}
 #tabbar button.start .cir .icn{font-size:26px;--icon-stroke:2;color:inherit;opacity:1}
-#tabbar button.start span{color:var(--acc);font-weight:600}
+#tabbar button.start span{color:var(--ink,var(--acc));font-weight:600}
 /* `.cir` is itself a <span>, so the label rules above and below reach it too and
    outrank the `.cir` block — which is how the running state ended up painting an
    orange play glyph onto an orange disc. Both states restate their own colour.
    The disc is orange in either theme, so its glyph is black, not `--on-acc`. */
-#tabbar button.start .cir{color:var(--on-acc)}
+#tabbar button.start .cir{color:var(--on-ink,var(--on-acc))}
 #tabbar button.start.rec .cir{background:var(--orange);color:#000;box-shadow:0 6px 18px -4px color-mix(in srgb,var(--orange) 55%,transparent)}
 #tabbar button.start.rec span{color:var(--orange)}
 #tabbar button.start.rec .cir::after{

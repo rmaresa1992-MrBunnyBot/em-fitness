@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "У некоторых продуктов нет КБЖУ, поэтому итоги приблизительные.",
   "Trainer’s notes": "Заметки тренера",
   "Your trainer updated your diet": "Тренер обновил ваш план питания",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "отпечаток пальца или разблокировку по лицу",
+  "your fingerprint, face or PIN": "отпечаток пальца, лицо или PIN-код",
 }

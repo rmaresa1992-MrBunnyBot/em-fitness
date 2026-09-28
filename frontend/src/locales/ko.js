@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "일부 음식에 매크로가 없어 합계는 대략적인 값이에요.",
   "Trainer’s notes": "트레이너 메모",
   "Your trainer updated your diet": "트레이너가 식단을 업데이트했어요",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "지문 또는 얼굴 인식",
+  "your fingerprint, face or PIN": "지문, 얼굴 또는 PIN",
 }

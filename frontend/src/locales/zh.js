@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "部分食物没有宏量营养数据，因此总计为估算值。",
   "Trainer’s notes": "教练备注",
   "Your trainer updated your diet": "你的教练更新了你的饮食计划",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "指纹或面部解锁",
+  "your fingerprint, face or PIN": "你的指纹、面容或 PIN 码",
 }

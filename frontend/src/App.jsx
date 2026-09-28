@@ -35,9 +35,9 @@ bindUI(useUI)   // lets the shared controls open sheets without importing the st
 function applyPrefs(theme, accent) {
   const de = document.documentElement
   de.dataset.theme = theme === 'light' ? 'light' : 'dark'
-  de.dataset.accent = ACCENTS[accent] ? accent : 'lime'
+  de.dataset.accent = ACCENTS[accent] ? accent : 'em'
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.content = de.dataset.theme === 'light' ? '#f2f2f7' : '#000000'
+  if (meta) meta.content = de.dataset.theme === 'light' ? '#f5f5f3' : '#000000'
 }
 
 function Shell() {
@@ -48,8 +48,8 @@ function Shell() {
   const langV = useLang()   // re-renders the whole shell when the language (pack) changes
   useEffect(() => { setNav(navigate) }, [navigate])
   useEffect(() => { applyPrefs(S.theme, S.accent) }, [S.theme, S.accent])
-  useEffect(() => { setLang(S.lang || 'en') }, [S.lang])
-  useEffect(() => { document.documentElement.lang = S.lang || 'en' }, [langV, S.lang])
+  useEffect(() => { setLang(S.lang || 'es') }, [S.lang])
+  useEffect(() => { document.documentElement.lang = S.lang || 'es' }, [langV, S.lang])
   // every tab/route change starts at the top of the page
   useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
   // bound to the workout, not to the route — checking Stats mid-session keeps the screen on

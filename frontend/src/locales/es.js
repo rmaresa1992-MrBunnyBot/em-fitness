@@ -357,7 +357,7 @@ export default {
   'Invite code': 'Código de invitación',
   'This app is invite-only — enter the code you were given.': 'Esta app es solo por invitación: introduce el código que te dieron.',
   'An invite code is required': 'Se requiere un código de invitación',
-  'Admin dashboard': 'Panel de administración',
+  'Admin dashboard': 'Panel del entrenador',
   // --- muscle map ---
   'Muscle balance': 'Equilibrio muscular',
   'by sets worked': 'por series trabajadas',
@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "Algunos alimentos no tienen macros, así que los totales son aproximados.",
   "Trainer’s notes": "Notas de tu entrenador",
   "Your trainer updated your diet": "Tu entrenador actualizó tu dieta",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "tu huella o desbloqueo facial",
+  "your fingerprint, face or PIN": "tu huella, tu cara o tu PIN",
 }

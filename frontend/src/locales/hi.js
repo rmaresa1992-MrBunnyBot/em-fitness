@@ -721,4 +721,8 @@ export default {
   "Some foods have no macros, so the totals are approximate.": "कुछ खाद्य पदार्थों में मैक्रो नहीं हैं, इसलिए कुल अनुमानित है।",
   "Trainer’s notes": "आपके ट्रेनर के नोट्स",
   "Your trainer updated your diet": "आपके ट्रेनर ने आपकी डाइट अपडेट की",
+  // EM Fitness: passkey unlock method, inserted into the login sentences
+  "Face ID / Touch ID": "Face ID / Touch ID",
+  "fingerprint or face unlock": "फ़िंगरप्रिंट या फ़ेस अनलॉक",
+  "your fingerprint, face or PIN": "आपका फ़िंगरप्रिंट, चेहरा या PIN",
 }
