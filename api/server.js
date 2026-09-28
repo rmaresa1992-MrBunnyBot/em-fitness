@@ -20,7 +20,7 @@ const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
 const RP_ID = process.env.RP_ID || 'localhost';
 const ORIGIN = process.env.ORIGIN || 'http://localhost:8080';
-const RP_NAME = process.env.RP_NAME || 'openGym';
+const RP_NAME = process.env.RP_NAME || 'EM Fitness';
 // Admin dashboard (issue): admins are matched by uid; INVITE_ONLY gates new signups behind a
 // code the admin generates. Both default off so a fresh self-hosted instance stays open.
 const ADMIN_UIDS = (process.env.ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -93,6 +93,13 @@ async function sendPush(userId, payload) {
   if (dirty) saveDb();
 }
 
+// EM Fitness: push texts in the user's own language. The server has no i18n; the instance runs
+// in Spanish, so it is Spanish or (for anyone who switched) the original English.
+const isEs = uid => readState(uid)?.lang === 'es';
+// A routine's `emoji` is normally a glyph key ("figureStrength", lib/glyphs.js), which is not
+// something to print in a notification; only a legacy real emoji is.
+const routineEmoji = e => (e && /[^\x00-\x7F]/.test(e) ? e : '🏋️');
+
 // Rest-timer alerts: client schedules on start/extend, cancels on skip or on-screen completion —
 // this only fires when the tab was backgrounded/suspended and never got to cancel it itself.
 const restTimers = new Map(); // userId -> Timeout
@@ -101,7 +108,9 @@ function scheduleRestTimer(userId, sec) {
   if (t) clearTimeout(t);
   restTimers.set(userId, setTimeout(() => {
     restTimers.delete(userId);
-    sendPush(userId, { title: 'Rest over 💪', body: 'Time for your next set.', tag: 'rest-timer' });
+    sendPush(userId, isEs(userId)
+      ? { title: 'Descanso terminado 💪', body: 'Toca la siguiente serie.', tag: 'rest-timer' }
+      : { title: 'Rest over 💪', body: 'Time for your next set.', tag: 'rest-timer' });
   }, sec * 1000));
 }
 function cancelRestTimer(userId) {
@@ -148,9 +157,12 @@ setInterval(() => {
     console.log('reminder firing', user.id, rid);
     user.lastReminder = now.date;
     saveDb();
+    const es = S.lang === 'es';
     sendPush(user.id, {
-      title: routine ? `${routine.emoji || '🏋️'} ${routine.name} today` : 'Workout planned today',
-      body: "It's on your plan — let's go 💪",
+      title: routine
+        ? `${routineEmoji(routine.emoji)} ${routine.name} ${es ? 'hoy' : 'today'}`
+        : (es ? 'Tienes entreno hoy' : 'Workout planned today'),
+      body: es ? 'Está en tu plan: ¡vamos! 💪' : "It's on your plan — let's go 💪",
       tag: 'day-reminder'
     });
   }
@@ -437,7 +449,9 @@ const routes = {
   'POST /api/push/test': async (req, res) => {
     const user = readSession(req);
     if (!user) return json(res, 401, { error: 'not signed in' });
-    await sendPush(user.id, { title: 'openGym', body: 'Test notification ✅ — this is what alerts look like.', tag: 'test' });
+    await sendPush(user.id, isEs(user.id)
+      ? { title: 'EM Fitness', body: 'Notificación de prueba ✅: así se ven los avisos.', tag: 'test' }
+      : { title: 'EM Fitness', body: 'Test notification ✅ — this is what alerts look like.', tag: 'test' });
     json(res, 200, { ok: true });
   },
 
@@ -582,9 +596,12 @@ coachJobs.recoverOnBoot();
 coachJobs.setProposalHook((uid, pending) => {
   const n = (pending?.changes || []).length;
   if (!n) return;
+  const es = isEs(uid);
   sendPush(uid, {
-    title: 'Your Coach has been reading',
-    body: n === 1 ? '1 suggestion after this week' : `${n} suggestions after this week`,
+    title: es ? 'Tu Entrenador revisó tus entrenos' : 'Your Coach has been reading',
+    body: es
+      ? (n === 1 ? '1 sugerencia tras esta semana' : `${n} sugerencias tras esta semana`)
+      : (n === 1 ? '1 suggestion after this week' : `${n} suggestions after this week`),
     tag: 'coach-proposal', url: '#/coach'
   });
 });

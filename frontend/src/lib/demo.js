@@ -11,4 +11,5 @@
 // lands in a self-hosted bundle.
 export const DEMO = import.meta.env.VITE_DEMO === '1'
 export const DEMO_SEEDED = 'gym_demo_seeded_v1'
-export const REPO = 'https://github.com/DuarteSantos8/openGym'
+// EM Fitness: the AGPL source offer points at this fork, the code that is actually running.
+export const REPO = 'https://github.com/rmaresa1992-MrBunnyBot/em-fitness'
