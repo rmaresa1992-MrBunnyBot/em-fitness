@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { api } from '../lib/api.js'
@@ -94,7 +93,6 @@ function InvitesCard({ invites, reload }) {
 }
 
 export default function Admin() {
-  const nav = useNavigate()
   const user = useStore(s => s.user)
   const toast = useUI(s => s.toast)
   const openSheet = useUI(s => s.openSheet)
@@ -115,8 +113,7 @@ export default function Admin() {
 
   return <div className="narrow">
     <div className="hdr">
-      <button className="iconbtn" onClick={() => nav('/settings')} aria-label="Volver"><Icon name="chevronLeft" /></button>
-      <div style={{ flex: 1, marginLeft: 8 }}><h1 style={{ margin: 0 }}>Entrenador</h1>
+      <div style={{ flex: 1 }}><h1 style={{ margin: 0 }}>Entrenador</h1>
         <div className="sub">{users ? users.length + ' usuarios · ' + activeCount + ' activos esta semana' : 'Cargando…'}</div></div>
       <button className="iconbtn" onClick={() => { loadUsers(); loadInvites() }} aria-label="actualizar">↻</button>
     </div>

@@ -34,6 +34,8 @@ export default function TabBar({ onStart }) {
       <Tab k="home" icon="house" to="/home" label={t('Home')} />
       <Tab k="plan" icon="calendar" to="/plan" label={t('Plan')} />
       {hasDiet && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
+      {/* EM Fitness: the trainer's panel (/admin) as a tab. Admin only, Spanish on purpose (D6). */}
+      {user?.admin && <Tab k="admin" icon="clipboard" to="/admin" label="Entrenador" />}
       <button className={'start' + (S.active ? ' rec' : '')} onClick={startWorkout}>
         <span className="cir"><Icon name={S.active ? 'play' : 'dumbbell'} /></span>
         <span>{S.active ? t('Resume') : t('Start')}</span>
