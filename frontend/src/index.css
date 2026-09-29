@@ -168,6 +168,13 @@ button,.chip,.tile,.item,.wday,.cal-d,.swatch,.hm-c,.lrow,.seg button,.stp butto
    Title Case. The compound selectors are needed: .tag/.chip come later in this file
    and would otherwise win on source order. */
 .nocap,.tag.nocap,.chip.nocap{text-transform:none}
+/* EM Fitness: capitalize is Title Case — right for the lowercase English dataset, wrong
+   elsewhere ("Día De Descanso", "Press De Banca"). Other languages get sentence case:
+   only the first letter. ::first-letter needs a block container, so translated exercise
+   names also arrive capitalised from the pack (scripts/build-names.mjs) for inline spots.
+   .tag is inline-flex (no ::first-letter) and keeps upstream's Title Case. */
+html:not([lang|="en"]) :is(.capitalize,.chip,.today-row .ttl,#timer.working .lbl){text-transform:none}
+html:not([lang|="en"]) :is(.capitalize,.chip,.today-row .ttl,#timer.working .lbl)::first-letter{text-transform:uppercase}
 
 /* ---------------------------------------------------------------- layout -- */
 #app{
