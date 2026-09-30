@@ -16,6 +16,9 @@ import { MOBILE } from '../lib/mobile.js'
 import { Progress } from './Stats.jsx'
 import { weekAdherence } from '../lib/adherence.js'
 import { isAthlete } from '../lib/roles.js'
+import { petStatus, newPet } from '../lib/pet.js'
+import Capybara from '../components/Capybara.jsx'
+import { MOOD_NAME } from './Pet.jsx'
 import { status as billingStatus, fmtMoney, STATE_COLOR } from '../lib/billing.js'
 
 // A job in flight or a proposal waiting is the only reason the Coach interrupts Home. When it
@@ -84,6 +87,25 @@ function BillingCard() {
   </div>
 }
 
+// EM Fitness fase 6: the capybara on Inicio — how it is at a glance, the way into its place.
+function PetCard({ nav }) {
+  const S = useStore(s => s.S)
+  const st = S.pet ? petStatus(S, todayISO()) : null
+  if (!st) return null
+  const bar = (v, c) => <div className="meter" style={{ height: 6 }}><i style={{ width: v + '%', background: c }} /></div>
+  return <div className="card tappable em-card" style={{ cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', padding: 12 }} onClick={() => nav('/capibara')}>
+    <Capybara mood={st.mood} wear={S.pet.wear || {}} size={88} title={S.pet.name} />
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="lbl2">{S.pet.name}</div>
+      <div className="ttl" style={{ textTransform: 'none' }}>{t(MOOD_NAME[st.mood])}</div>
+      <div style={{ display: 'grid', gap: 5, marginTop: 8 }}>
+        {bar(st.food, 'var(--acc-fill, var(--acc))')}{bar(st.water, '#3b9ad9')}{bar(st.happy, '#e0567a')}
+      </div>
+    </div>
+    <span className="tag nocap"><Icon name="coin" />{st.coins}</span>
+  </div>
+}
+
 // EM Fitness: this week's adherence (D16) — the athlete's main indicator.
 function AdherenceCard({ nav }) {
   const S = useStore(s => s.S)
@@ -117,6 +139,9 @@ export default function Home() {
   const athlete = isAthlete(user)
   const syncInbox = useStore(s => s.syncInbox)
   useEffect(() => { syncInbox() }, [])
+  // EM Fitness fase 6: every athlete gets a capybara on their first visit (D15).
+  const pulledAt = useStore(s => s.pulledAt)
+  useEffect(() => { if (pulledAt && isAthlete(user) && !S.pet) useStore.getState().update(s => { if (!s.pet) s.pet = newPet(todayISO()) }) }, [user?.id, !!S.pet, pulledAt])
 
   const today = new Date()
   const routine = effectiveRoutine(S, todayISO())
@@ -184,7 +209,7 @@ export default function Home() {
     </div>
 
     {coachOn && <CoachCard nav={nav} />}
-    {athlete && <><AdherenceCard nav={nav} /><InboxCard nav={nav} /><BillingCard /></>}
+    {athlete && <><AdherenceCard nav={nav} /><PetCard nav={nav} /><InboxCard nav={nav} /><BillingCard /></>}
 
     {athlete && !S.routines.length && !S.active && <div className="card">
       <div className="row" style={{ gap: 10, marginBottom: 6 }}>

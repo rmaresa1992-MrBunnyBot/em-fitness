@@ -4,6 +4,8 @@ import { EXIDX } from '../lib/exercises.js'
 import { nameOf } from '../lib/i18n.js'
 import { deviations } from '../lib/history.js'
 import { fbLabel } from '../lib/feedback.js'
+import { petStatus } from '../lib/pet.js'
+import Capybara from '../components/Capybara.jsx'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { api } from '../lib/api.js'
@@ -153,6 +155,21 @@ function FollowUp({ athlete }) {
   </>
 }
 
+// EM Fitness fase 6: the athlete's capybara, replayed here from their plan and workouts.
+const MOOD_ES = { happy: 'Feliz', ok: 'Bien', hungry: 'Con hambre', tired: 'Cansado', sleeping: 'Dormido', fainted: 'Desmayado' }
+function PetLine({ d }) {
+  if (!d.pet) return null
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const st = petStatus({ routines: d.routines, week: d.week, dayPlan: d.dayPlan, workouts: d.workouts, pet: d.pet }, today)
+  if (!st) return null
+  return <div className="row" style={{ gap: 10, margin: '10px 0 4px' }}>
+    <Capybara mood={st.mood} wear={d.pet.wear || {}} size={64} title={d.pet.name} />
+    <div className="small"><b style={{ fontWeight: 600 }}>{d.pet.name}</b> · {MOOD_ES[st.mood]}
+      <div className="dim">Comida {st.food}% · Agua {st.water}% · Felicidad {st.happy}%</div></div>
+  </div>
+}
+
 function UserDetail({ id, onChanged, close }) {
   const [d, setD] = useState(null)
   const toast = useUI(s => s.toast)
@@ -191,6 +208,7 @@ function UserDetail({ id, onChanged, close }) {
         : confirmSheet({ title: '¿Desactivar a ' + u.name + '?', message: 'Se cierra su sesión en todos sus dispositivos y no podrá entrar ni sincronizar hasta que lo reactives.', confirmText: 'Desactivar', danger: true, onConfirm: () => setDisabled(true) })}>
       {u.disabled ? 'Reactivar cuenta' : 'Desactivar cuenta'}</button>}
     {!u.admin && <FollowUp athlete={u.id} />}
+    {!u.admin && <PetLine d={d} />}
     {!u.admin && <BillingSection athlete={u.id} onChanged={onChanged} />}
     <TrainerAssign athlete={u.id} />
     <DietSummary athlete={u.id} close={close} />

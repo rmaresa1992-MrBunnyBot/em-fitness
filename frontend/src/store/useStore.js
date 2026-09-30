@@ -98,7 +98,7 @@ export const useStore = create((set, get) => {
     localStorage.removeItem('gym_dirty')
     localStorage.removeItem(KEY)
     localStorage.removeItem(DIET_KEY)
-    set({ diet: null, inbox: null, billing: null })
+    set({ diet: null, inbox: null, billing: null, pulledAt: null })
     persist(clone(DEF), false)
   }
 
@@ -116,6 +116,7 @@ export const useStore = create((set, get) => {
     // EM Fitness: the chat with the trainer ({ unread, last }) and the monthly fee
     // ({ fee, due, last }) — both server-only, fetched with the trainer's data, null until then.
     inbox: null,
+    pulledAt: null,
     billing: null,
 
     // Mutate a draft of S via producer fn, then persist + schedule sync.
@@ -142,8 +143,10 @@ export const useStore = create((set, get) => {
       catch (e) { localStorage.setItem('gym_dirty', '1') }
     },
     async pullState() {
+      let pulled = false
       try {
         const { state } = await api('/api/data')
+        pulled = true
         const S = get().S
         const dirty = localStorage.getItem('gym_dirty') === '1'
         if (state && (!hasData(S) || ((state._ts || 0) >= (S._ts || 0) && !dirty))) {
@@ -155,6 +158,10 @@ export const useStore = create((set, get) => {
       } catch (e) { /* offline — keep local */ }
       // After the pull, never before: applying onto a state the pull then replaces would lose it.
       await get().syncTrainer()
+      // EM Fitness: anything the app writes on its own (the capybara's birth) waits for this, so a
+      // stale local copy never gets a newer _ts than the server's just by being opened. Offline
+      // doesn't count as pulled.
+      if (pulled) set({ pulledAt: Date.now() })
     },
 
     // EM Fitness: pull the trainer's assignments and apply them (lib/trainer.js). Persists —

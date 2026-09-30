@@ -532,6 +532,8 @@ const routes = {
       lastSync: S._ts || null,
       routines: (S.routines || []).map(r => ({ id: r.id, name: r.name, emoji: r.emoji, count: (r.ex || []).length })),
       bodyweight: S.bodyweight || [],
+      // EM Fitness fase 6: what the client needs to replay the athlete's capybara (lib/pet.js)
+      week: S.week || {}, dayPlan: S.dayPlan || {}, pet: S.pet || null,
       workouts: (S.workouts || []).slice().reverse()   // newest first for display
     });
   },

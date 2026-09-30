@@ -80,6 +80,9 @@ const P = {
   play: <path d="M8.4 5.6 18 12l-9.6 6.4Z" />,
   pause: <path d="M9.4 5.8v12.4M14.6 5.8v12.4" />,
   reset: <><path d="M4.4 12a7.6 7.6 0 1 0 2.3-5.4" /><path d="M4 4.4v4.4h4.4" /></>,
+  // EM Fitness: capybara — coins and water
+  coin: <><circle cx="12" cy="12" r="8.2" /><circle cx="12" cy="12" r="5.2" /><path d="M12 9.6v4.8" /></>,
+  drop: <path d="M12 3.6c3 3.9 5.6 7.2 5.6 10.2a5.6 5.6 0 0 1-11.2 0c0-3 2.6-6.3 5.6-10.2Z" />,
   // EM Fitness: trainer ↔ athlete chat
   chat: <path d="M4.4 11.2c0-3.8 3.4-6.6 7.6-6.6s7.6 2.8 7.6 6.6-3.4 6.6-7.6 6.6c-1 0-2-.2-2.9-.5L5 18.9l1.2-3.6c-1.1-1.1-1.8-2.5-1.8-4.1Z" />,
   send: <path d="M4.2 11.6 19.6 4.4l-4.6 15.2-3.3-6.5-7.5-1.5ZM11.7 13.1l7.9-8.7" />,
