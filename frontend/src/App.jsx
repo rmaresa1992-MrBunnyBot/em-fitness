@@ -4,10 +4,9 @@ import { useStore } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { ACCENTS } from './lib/format.js'
-import { setLang, useLang } from './lib/i18n.js'
+import { setLang, useLang, t } from './lib/i18n.js'
 import { setNav } from './lib/nav.js'
 import { useWakeLock } from './lib/wakelock.js'
-import { startFlow } from './sheets.jsx'
 import Icon from './components/Icon.jsx'
 import TabBar from './components/TabBar.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
@@ -19,7 +18,6 @@ import Home from './views/Home.jsx'
 import Plan from './views/Plan.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
 import Workout from './views/Workout.jsx'
-import Stats from './views/Stats.jsx'
 import History from './views/History.jsx'
 import Library from './views/Library.jsx'
 import Settings from './views/Settings.jsx'
@@ -40,6 +38,15 @@ function applyPrefs(theme, accent) {
   de.dataset.accent = ACCENTS[accent] ? accent : 'em'
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) meta.content = de.dataset.theme === 'light' ? '#f5f5f3' : '#000000'
+}
+
+// EM Fitness: the sticky bar with the app's name and the way into Settings (visual layer in
+// index.css). Left out during a workout, where every pixel goes to the sets.
+function TopBar({ onSettings }) {
+  return <header id="topbar"><div className="in">
+    <span className="brand">EM Fitness</span>
+    <button className="iconbtn" onClick={onSettings} aria-label={t('Settings')}><Icon name="gear" /></button>
+  </div></header>
 }
 
 function Shell() {
@@ -70,6 +77,7 @@ function Shell() {
     <>
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
+      {authed && loc.pathname !== '/workout' && <TopBar onSettings={() => navigate('/settings')} />}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
           {!authed ? <Login /> : (
@@ -78,7 +86,8 @@ function Shell() {
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={<RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />
-              <Route path="/stats" element={<Stats />} />
+              {/* EM Fitness: progress lives in Inicio now; old links and bookmarks land there */}
+              <Route path="/stats" element={<Navigate to="/home" replace />} />
               <Route path="/history" element={<History />} />
               <Route path="/library" element={<Library />} />
               <Route path="/settings" element={<Settings />} />
@@ -99,7 +108,7 @@ function Shell() {
           )}
         </ErrorBoundary>
       </div>
-      <TabBar onStart={startFlow} />
+      <TabBar />
       <RestTimer />
       <Modals />
       <Toast />

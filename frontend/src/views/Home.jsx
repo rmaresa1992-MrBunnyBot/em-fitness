@@ -13,6 +13,7 @@ import { coachAvailable, hasConsent } from '../lib/coach.js'
 import { useCoachStatus } from '../lib/coach-api.js'
 import { DEMO } from '../lib/demo.js'
 import { MOBILE } from '../lib/mobile.js'
+import { Progress } from './Stats.jsx'
 import { status as billingStatus, fmtMoney, STATE_COLOR } from '../lib/billing.js'
 
 // A job in flight or a proposal waiting is the only reason the Coach interrupts Home. When it
@@ -121,9 +122,10 @@ export default function Home() {
   const onToday = () => { if (S.active) nav('/workout'); else if (routine) startFlow(routine.id); else dayOverrideSheet(todayISO()) }
 
   return <div className="narrow">
+    {/* EM Fitness: date above, greeting as the title; Settings lives in the top bar now */}
     <div className="hdr">
-      <div><h1>{user ? t('Hi {0}', user.name) : 'EM Fitness'}</h1><div className="sub">{today.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
-      <button className="iconbtn" onClick={() => nav('/settings')} aria-label={t('Settings')}><Icon name="gear" /></button>
+      <div><div className="kicker">{today.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <h1>{user ? t('Hi {0}', user.name) : 'EM Fitness'}</h1></div>
     </div>
 
     <div className="card">
@@ -147,6 +149,13 @@ export default function Home() {
           : routine ? <span className="tag acc">{t('Start')}</span>
           : <Icon name="plus" className="chev" />}
       </div>
+      {/* EM Fitness: the tab bar's centre is Inicio now, so starting lives here. A rest day
+          still offers a free session, as the old centre button did. */}
+      <div style={{ marginTop: 12 }}>
+        {S.active ? <Button variant="primary" icon="play" onClick={() => nav('/workout')}>{t('Resume')}</Button>
+          : routine && routine.ex.length ? <Button variant="primary" icon="dumbbell" onClick={() => startFlow(routine.id)}>{t('Start')}</Button>
+          : <Button icon="dumbbell" onClick={() => nav('/workout')}>{t('Freestyle workout (pick as you go)')}</Button>}
+      </div>
     </div>
 
     {coachOn && <CoachCard nav={nav} />}
@@ -168,6 +177,8 @@ export default function Home() {
       </div>
     )}
 
+    {/* EM Fitness: Inicio and Progreso are one view — body weight opens the progress half */}
+    <h4 className="sec">{t('Stats')}</h4>
     <div className="card">
       <div className="row between" style={{ marginBottom: 6 }}>
         <h2 style={{ margin: 0 }}>{t('Body weight')}</h2>
@@ -198,17 +209,6 @@ export default function Home() {
       </> : <div className="muted small">{t("No entries yet — log your weight to start the curve. It's also asked before every workout.")}</div>}
     </div>
 
-    <div className="card tappable" style={{ cursor: 'pointer' }} onClick={() => calendarSheet()}>
-      <div className="row between">
-        <div>
-          <div className="row" style={{ gap: 7, fontSize: 22, fontWeight: 600, letterSpacing: '-.021em' }}>
-            <Icon name="flame" style={{ color: 'var(--orange)' }} />
-            {t('{0} week streak', streakWeeks(S))}
-          </div>
-          <div className="muted small" style={{ marginTop: 2 }}>{wThisWeek}{plannedPerWeek ? ' / ' + plannedPerWeek : ''} {t('this week')} · {t(S.workouts.length === 1 ? '{0} workout total' : '{0} workouts total', S.workouts.length)}</div>
-        </div>
-        <Icon name="calendar" className="chev" style={{ fontSize: 20 }} />
-      </div>
-    </div>
+    <Progress />
   </div>
 }

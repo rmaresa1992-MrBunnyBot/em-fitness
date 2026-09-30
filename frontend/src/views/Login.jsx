@@ -138,7 +138,7 @@ function PasswordForm() {
         placeholder={t('Password')} aria-label={t('Password')} maxLength={200} value={password}
         style={{ textTransform: 'none', paddingRight: 48 }} onChange={e => setPassword(e.target.value)} />
       <button type="button" className="iconbtn" onClick={() => setShow(s => !s)} aria-label={show ? t('Hide password') : t('Show password')}
-        aria-pressed={show} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, background: 'none' }}>
+        aria-pressed={show} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, background: 'none', border: 0 }}>
         <Icon name={show ? 'lock' : 'key'} />
       </button>
     </div>
