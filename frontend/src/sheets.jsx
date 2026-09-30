@@ -508,11 +508,13 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
   const dropOn = mode === 'reps' && !!drop
   const toggleDrop = on => setDrop(on ? seedScheme(c) : null)
   const editRow = (i, k, v) => setDrop(rows => rows.map((s, j) => j === i ? { ...s, [k]: v } : s))
+  // EM Fitness: rest between this exercise's sets; unset = the profile's rest timer.
+  const rest = c.rest > 0 ? { rest: Math.min(900, Math.round(c.rest)) } : {}
   const save = () => {
     close()
     if (dropOn) {
       const rows = drop.map(s => ({ r: Math.max(1, Math.round(s.r) || 1), w: Math.max(0, +s.w || 0) }))
-      onSave({ sets: rows.length, mode: 'reps', reps: rows[0].r, weight: rows[0].w, scheme: rows })
+      onSave({ sets: rows.length, mode: 'reps', reps: rows[0].r, weight: rows[0].w, scheme: rows, ...rest })
       return
     }
     const sets = Math.max(1, Math.round(c.sets) || (cardio ? 1 : 3))
@@ -521,13 +523,13 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
     const prog = {}
     if (c.prog) prog.prog = c.prog
     if (c.inc > 0) prog.inc = c.inc
-    if (cardio) onSave({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8) })
-    else if (mode === 'time') onSave({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...prog })
+    if (cardio) onSave({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8), ...rest })
+    else if (mode === 'time') onSave({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...prog, ...rest })
     else {
       const reps = Math.max(1, Math.round(c.reps) || 10)
       const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...prog }
       if (policyFor({ ...c, id: ex.id }, routine, 'reps') === 'double') out.repsMin = Math.min(reps, Math.max(1, Math.round(c.repsMin) || Math.max(1, reps - 2)))
-      onSave(out)
+      onSave({ ...out, ...rest })
     }
   }
   return <>
@@ -580,6 +582,10 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
     </div>}
     <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
     </>}
+    <div className="row cfgrow" style={{ marginBottom: 18 }}>
+      <Stepper label={t('Rest between sets (s)')} value={c.rest > 0 ? c.rest : st.restSec} step={15} decimal={false}
+        onChange={v => setC(x => ({ ...x, rest: v }))} />
+    </div>
     <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
     {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}
@@ -972,7 +978,13 @@ function doFinishWorkout() {
     // `target` (what the session prescribed) is kept alongside the sets: without it a
     // finished workout cannot say whether it hit its reps, and a timed session reads back
     // as "0 reps". It is what the progression engine works from.
-    entries: A.entries.map(e => ({ id: e.id, sets: e.sets, topW: e.topW || null, target: e.target || null })).filter(e => e.sets.some(s => s.done)),
+    // EM Fitness: `fb` is the athlete's discomfort report for the trainer. An exercise dropped
+    // because it hurt has no set done and is exactly the one the trainer must see, so it stays.
+    entries: A.entries.map(e => ({ id: e.id, sets: e.sets, topW: e.topW || null, target: e.target || null, ...(e.fb ? { fb: e.fb } : {}) }))
+      .filter(e => e.sets.some(s => s.done) || e.fb),
+    // EM Fitness: how many sets the session had, so adherence (lib/adherence.js) can judge
+    // "75 % of the sets" even though exercises with nothing done are not kept.
+    setsPlanned: A.entries.reduce((n, e) => n + e.sets.length, 0),
     prs
   }
   w.vol = workoutVolume(w)

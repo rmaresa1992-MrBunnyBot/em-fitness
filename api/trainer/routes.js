@@ -26,6 +26,7 @@ const Exercise = z.object({
   prog: z.enum(POLICIES).optional(),
   inc: num(100).optional(),
   sg: z.string().max(40).optional(),
+  rest: z.number().int().min(0).max(900).optional(),   // seconds between sets (EM Fitness)
   // Drop set ("serie descendente"): reps and weight per set. Mirrors frontend history.js
   // schemeOf — 2 to 10 sets.
   scheme: z.array(z.object({ r: z.number().int().min(1).max(200), w: num(2000) })).min(2).max(10).optional()

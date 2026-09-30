@@ -152,3 +152,11 @@ test('a drop set (serie descendente) travels with its per-set reps and weights',
   for (const bad of [[{ r: 10, w: 30 }], [{ r: 0, w: 30 }, { r: 5, w: 10 }], [{ r: 10, w: -1 }, { r: 5, w: 10 }], Array(11).fill({ r: 5, w: 5 })])
     assert.equal((await assign({ athletes: ['luis'], routine: routine({ id: 'r-bad', ex: [{ ...drop, scheme: bad }] }), days: [] })).code, 400, JSON.stringify(bad).slice(0, 40));
 });
+
+test('rest between sets (seconds) is kept and bounded', async () => {
+  const ok = await assign({ athletes: ['luis'], routine: routine({ id: 'r-rest', ex: [{ id: '0001', sets: 3, reps: 10, rest: 90 }] }), days: [] });
+  assert.equal(ok.code, 200);
+  assert.equal((await mine('luis')).body.assignments.find(a => a.rid === 'r-rest').routine.ex[0].rest, 90);
+  for (const bad of [-5, 901, 1.5, '90'])
+    assert.equal((await assign({ athletes: ['luis'], routine: routine({ id: 'r-rest2', ex: [{ id: '0001', sets: 3, reps: 10, rest: bad }] }), days: [] })).code, 400, String(bad));
+});

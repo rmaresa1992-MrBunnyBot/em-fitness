@@ -193,7 +193,8 @@ function ActiveWorkout() {
         beep(S.sound, 1040, 0.12); vibrate(30)
         const isLastExInUnit = idx === unit[unit.length - 1]
         const unitDone = unit.every(ui => (ui === idx ? e : A.entries[ui]).sets.every(x => x.done))
-        if (isLastExInUnit && !unitDone) startRest(S.restSec)
+        // EM Fitness: the routine's own rest for this exercise wins over the profile's timer.
+        if (isLastExInUnit && !unitDone) startRest(e.target?.rest > 0 ? e.target.rest : S.restSec)
         else if (unitDone) stopRest()
         if (unitDone && isLastUnit) workoutDone = true      // last exercise's last set → done
         // Only reps training has a "working weight" worth confirming — a bodyweight plank

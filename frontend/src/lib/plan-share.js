@@ -43,6 +43,7 @@ function cleanEx(e) {
   if (e.inc > 0) o.inc = e.inc
   if (e.repsMin != null) o.repsMin = e.repsMin
   if (e.sg) o.sg = e.sg
+  if (e.rest > 0) o.rest = e.rest   // EM Fitness: rest between sets set by the trainer
   return o
 }
 
