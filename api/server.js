@@ -15,6 +15,9 @@ import { coachRoutes } from './coach/routes.js';
 import { startCadence } from './coach/cadence.js';
 import { trainerRoutes } from './trainer/routes.js';
 import { dietRoutes } from './diet/routes.js';
+import { billingRoutes, billingReminders } from './billing/routes.js';
+import { messageRoutes } from './messages/routes.js';
+import { authRoutes } from './auth/routes.js';
 
 const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
@@ -52,6 +55,8 @@ try { db = JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch {}
 db.subs = db.subs || [];
 db.invites = db.invites || [];
 const isAdmin = user => !!user && (user.admin === true || ADMIN_UIDS.includes(user.id));
+// What the client may see of a user — never the password hash.
+const publicUser = user => ({ id: user.id, name: user.name, admin: isAdmin(user), ...(user.username ? { username: user.username } : {}) });
 function saveDb() { atomicWrite(dbFile, JSON.stringify(db, null, 2)); }
 function atomicWrite(file, content) {
   const tmp = file + '.tmp';
@@ -293,7 +298,7 @@ const routes = {
   'GET /api/me': async (req, res) => {
     const user = readSession(req);
     if (!user) return json(res, 401, { error: 'not signed in' });
-    json(res, 200, { user: { id: user.id, name: user.name, admin: isAdmin(user) } });
+    json(res, 200, { user: publicUser(user) });
   },
 
   'POST /api/register/options': async (req, res) => {
@@ -348,7 +353,7 @@ const routes = {
       transports: body.credential?.response?.transports || []
     });
     saveDb();
-    json(res, 200, { user: { id: user.id, name: user.name, admin: isAdmin(user) } }, { 'Set-Cookie': sessionCookie(user) });
+    json(res, 200, { user: publicUser(user) }, { 'Set-Cookie': sessionCookie(user) });
   },
 
   'POST /api/login/options': async (req, res) => {
@@ -387,7 +392,7 @@ const routes = {
     const user = db.users.find(u => u.id === cred.userId);
     if (!user) return json(res, 500, { error: 'user missing' });
     if (user.disabled) return json(res, 403, { error: 'this account has been disabled' });
-    json(res, 200, { user: { id: user.id, name: user.name, admin: isAdmin(user) } }, { 'Set-Cookie': sessionCookie(user) });
+    json(res, 200, { user: publicUser(user) }, { 'Set-Cookie': sessionCookie(user) });
   },
 
   'POST /api/logout': async (req, res) => json(res, 200, { ok: true }, { 'Set-Cookie': clearCookie }),
@@ -498,7 +503,7 @@ const routes = {
       const workouts = S.workouts || [];
       const last = workouts[workouts.length - 1];
       return {
-        id: u.id, name: u.name, created: u.created || null,
+        id: u.id, name: u.name, username: u.username || null, hasPassword: !!u.pw, created: u.created || null,
         disabled: !!u.disabled, admin: isAdmin(u), invitedBy: u.invitedBy || null,
         workouts: workouts.length,
         lastWorkout: last ? last.d : null,
@@ -518,7 +523,7 @@ const routes = {
     if (!u) return json(res, 404, { error: 'no such user' });
     const S = readState(u.id) || {};
     json(res, 200, {
-      user: { id: u.id, name: u.name, created: u.created || null, disabled: !!u.disabled, admin: isAdmin(u), invitedBy: u.invitedBy || null },
+      user: { id: u.id, name: u.name, username: u.username || null, hasPassword: !!u.pw, created: u.created || null, disabled: !!u.disabled, admin: isAdmin(u), invitedBy: u.invitedBy || null },
       unit: S.unit || 'kg',
       lastSync: S._ts || null,
       routines: (S.routines || []).map(r => ({ id: r.id, name: r.name, emoji: r.emoji, count: (r.ex || []).length })),
@@ -584,8 +589,29 @@ const routes = {
   ...trainerRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush }),
 
   /* ---------- EM Fitness: trainer sends diets ---------- */
-  ...dietRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush })
+  ...dietRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush }),
+
+  /* ---------- EM Fitness: monthly fees, chat, username + password accounts ---------- */
+  ...billingRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users }),
+  ...messageRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, isAdmin, readState, sendPush }),
+  ...authRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, saveDb, sessionCookie, isAdmin, publicUser })
 };
+
+// EM Fitness: fee reminders. Each athlete's "today" is by their own clock (the zone the app
+// stamps for workout reminders), else the server's. Every 15 min is plenty for a daily nudge;
+// the store remembers what went out, so a restart never repeats one.
+const localNow = () => { const d = new Date(); const p = n => String(n).padStart(2, '0'); return { date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, hour: d.getHours() }; };
+const billingToday = uid => {
+  const tz = readState(uid)?.reminder?.tz;
+  const now = tz && userNow(tz);
+  return now ? { date: now.date, hour: +now.hhmm.slice(0, 2) } : localNow();
+};
+const runBillingReminders = () => {
+  try { billingReminders({ users: () => db.users.filter(u => !isAdmin(u)), todayFor: billingToday, readState, sendPush }); }
+  catch (e) { console.error('billing reminders', e); }
+};
+setTimeout(runBillingReminders, 30000).unref();
+setInterval(runBillingReminders, 15 * 60000).unref();
 
 /* ---------- Coach: boot recovery, notifications, scheduled reviews ---------- */
 // A job that was running when the process died is not coming back; say so rather than leaving

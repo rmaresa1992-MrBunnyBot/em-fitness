@@ -21,6 +21,13 @@ RUN npm ci --omit=dev --include=optional \
  && ./node_modules/.bin/codex --version
 COPY server.js ./
 COPY coach/ ./coach/
+# EM Fitness modules (trainer/ and diet/ were missing here since fase 1)
+COPY trainer/ ./trainer/
+COPY diet/ ./diet/
+COPY billing/ ./billing/
+COPY messages/ ./messages/
+COPY auth/ ./auth/
+COPY scripts/ ./scripts/
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "server.js"]
