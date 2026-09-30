@@ -509,8 +509,11 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
   const dropOn = mode === 'reps' && !!drop
   const toggleDrop = on => setDrop(on ? seedScheme(c) : null)
   const editRow = (i, k, v) => setDrop(rows => rows.map((s, j) => j === i ? { ...s, [k]: v } : s))
-  // EM Fitness: rest between this exercise's sets; unset = the profile's rest timer.
-  const rest = c.rest > 0 ? { rest: Math.min(900, Math.round(c.rest)) } : {}
+  // EM Fitness: rest between this exercise's sets. The stepper shows the profile's timer until
+  // it is touched, and what it shows is what gets saved — otherwise a trainer who reads "90"
+  // and leaves it would hand the athlete whatever rest the athlete's own profile has.
+  const restShown = c.rest > 0 ? c.rest : st.restSec
+  const rest = restShown > 0 ? { rest: Math.min(900, Math.round(restShown)) } : {}
   const save = () => {
     close()
     if (dropOn) {
