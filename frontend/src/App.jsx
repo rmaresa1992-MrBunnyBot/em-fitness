@@ -30,6 +30,7 @@ import TrainerDiet from './views/TrainerDiet.jsx'
 import TrainerMessages from './views/TrainerMessages.jsx'
 import Messages from './views/Messages.jsx'
 import { AthleteRoutine } from './views/AthletePlan.jsx'
+import TrainerDashboard from './views/TrainerDashboard.jsx'
 import { isAthlete } from './lib/roles.js'
 
 bindUI(useUI)   // lets the shared controls open sheets without importing the store at module scope
@@ -84,7 +85,8 @@ function Shell() {
         <ErrorBoundary>
           {!authed ? <Login /> : (
             <Routes>
-              <Route path="/home" element={<Home />} />
+              {/* EM Fitness fase 5: the trainer's Inicio is the dashboard */}
+              <Route path="/home" element={user?.admin ? <TrainerDashboard /> : <Home />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={isAthlete(user) ? <AthleteRoutine /> : <RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />

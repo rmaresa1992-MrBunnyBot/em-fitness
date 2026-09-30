@@ -36,7 +36,11 @@ function write(uid, rec) {
 export function upsert(uid, { rid, routine, customEx, days }) {
   const rec = read(uid);
   const prev = rec.assignments.find(a => a.rid === rid);
-  const next = { rid, rev: (prev?.rev || 0) + 1, at: Date.now(), days, routine, customEx };
+  // `since` is when this routine was first given to the athlete and survives re-assigning (which
+  // renews `at`), so the trainer dashboard measures adherence from the real start.
+  const now = Date.now();
+  const since = prev && !prev.removed ? (prev.since || prev.at) : now;
+  const next = { rid, rev: (prev?.rev || 0) + 1, at: now, since, days, routine, customEx };
   rec.assignments = [...rec.assignments.filter(a => a.rid !== rid), next];
   write(uid, rec);
   return next;

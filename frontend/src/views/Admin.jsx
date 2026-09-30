@@ -1,4 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { EXIDX } from '../lib/exercises.js'
+import { nameOf } from '../lib/i18n.js'
+import { deviations } from '../lib/history.js'
+import { fbLabel } from '../lib/feedback.js'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { api } from '../lib/api.js'
@@ -125,6 +130,29 @@ function AccessSheet({ u, close, onSaved }) {
   </>
 }
 
+// EM Fitness fase 5: adherence and discomfort reports for one athlete, from the dashboard.
+const pctOf = r => (r == null ? '—' : Math.round(r * 100) + '%')
+const exName = id => (EXIDX[id] ? nameOf(EXIDX[id]) : 'un ejercicio')
+function FollowUp({ athlete }) {
+  const [row, setRow] = useState(undefined)
+  useEffect(() => { api('/api/trainer/dashboard').then(d => setRow(d.rows.find(r => r.id === athlete) || null)).catch(() => setRow(null)) }, [athlete])
+  if (row === undefined) return <div className="dim small" style={{ padding: '6px 2px' }}>Cargando seguimiento…</div>
+  if (!row) return null
+  return <>
+    <h4 className="sec" style={{ marginTop: 16 }}>Seguimiento</h4>
+    <div className="tiles" style={{ textAlign: 'left' }}>
+      <div className="tile"><div className="l">Esta semana</div><div className="v" style={{ fontSize: '1.1rem' }}>{row.week.planned ? row.week.done + ' de ' + row.week.planned : 'sin plan'}</div></div>
+      <div className="tile"><div className="l">4 semanas</div><div className="v" style={{ fontSize: '1.1rem', color: row.month.rate != null && row.month.rate < 0.75 ? 'var(--st-soon)' : undefined }}>{pctOf(row.month.rate)}</div></div>
+    </div>
+    {row.reports.length > 0 && <div className="list" style={{ gap: 0, marginBottom: 6 }}>
+      {row.reports.map((r, i) => <div key={i} className="small" style={{ padding: '7px 2px', borderBottom: '1px solid var(--sep)', color: r.lvl === 'pain' ? 'var(--st-overdue)' : 'var(--st-soon)' }}>
+        <b style={{ fontWeight: 600 }}>{fbLabel(r)}</b> · {exName(r.exId)} · {fmtDate(r.d)}{r.note ? ' — “' + r.note + '”' : ''}
+      </div>)}
+    </div>}
+    {!row.synced && <div className="small" style={{ color: 'var(--st-soon)' }}>Tiene rutina asignada pero aún no abrió la app para recibirla.</div>}
+  </>
+}
+
 function UserDetail({ id, onChanged, close }) {
   const [d, setD] = useState(null)
   const toast = useUI(s => s.toast)
@@ -162,6 +190,7 @@ function UserDetail({ id, onChanged, close }) {
       onClick={() => u.disabled ? setDisabled(false)
         : confirmSheet({ title: '¿Desactivar a ' + u.name + '?', message: 'Se cierra su sesión en todos sus dispositivos y no podrá entrar ni sincronizar hasta que lo reactives.', confirmText: 'Desactivar', danger: true, onConfirm: () => setDisabled(true) })}>
       {u.disabled ? 'Reactivar cuenta' : 'Desactivar cuenta'}</button>}
+    {!u.admin && <FollowUp athlete={u.id} />}
     {!u.admin && <BillingSection athlete={u.id} onChanged={onChanged} />}
     <TrainerAssign athlete={u.id} />
     <DietSummary athlete={u.id} close={close} />
@@ -169,7 +198,15 @@ function UserDetail({ id, onChanged, close }) {
     {d.workouts.length ? <div className="list" style={{ gap: 0 }}>
       {d.workouts.slice(0, 60).map(w => <div key={w.id} className="row between" style={{ padding: '9px 2px', borderBottom: '1px solid var(--sep)' }}>
         <div><div className="small" style={{ fontWeight: 600 }}>{w.name}</div>
-          <div className="dim" style={{ fontSize: '.72rem' }}>{fmtDate(w.d, true)} · {fmtDur((w.end || w.start) - w.start)} · {setsDone(w)} series{w.prs?.length ? ' · ' + w.prs.length + ' récord' + (w.prs.length > 1 ? 's' : '') : ''}</div></div>
+          <div className="dim" style={{ fontSize: '.72rem' }}>{fmtDate(w.d, true)} · {fmtDur((w.end || w.start) - w.start)} · {setsDone(w)}{w.setsPlanned ? ' de ' + w.setsPlanned : ''} series{w.prs?.length ? ' · ' + w.prs.length + ' récord' + (w.prs.length > 1 ? 's' : '') : ''}</div>
+          {(w.entries || []).map(e => {
+            const under = deviations(e).filter(x => (x.set.w || 0) < x.planned.w)
+            if (!e.fb && !under.length) return null
+            return <div key={e.id} style={{ fontSize: '.72rem', marginTop: 2, color: e.fb?.lvl === 'pain' ? 'var(--st-overdue)' : 'var(--st-soon)' }}>
+              {exName(e.id)}: {[e.fb ? fbLabel(e.fb) + (e.fb.note ? ' “' + e.fb.note + '”' : '') : null,
+                under.length ? under.map(x => 'serie ' + (x.i + 1) + ' ' + (x.set.w || 0) + ' de ' + x.planned.w + ' ' + d.unit).join(', ') : null].filter(Boolean).join(' · ')}
+            </div>
+          })}</div>
         <span className="small muted">{fmtVol(w.vol ?? workoutVolume(w), d.unit)}</span>
       </div>)}
     </div> : <div className="empty small">Sin entrenos registrados.</div>}
@@ -221,6 +258,12 @@ export default function Admin() {
   const loadInvites = () => api('/api/admin/invites').then(d => setInvites(d.invites)).catch(() => {})
   // poll every 15s so the "training now" section stays live without a manual refresh
   useEffect(() => { if (!user?.admin) return; loadUsers(); loadInvites(); const iv = setInterval(loadUsers, 15000); return () => clearInterval(iv) }, [])
+  // EM Fitness fase 5: an alert on the dashboard links here with ?u=<athlete>
+  const loc = useLocation()
+  useEffect(() => {
+    const u = new URLSearchParams(loc.search).get('u')
+    if (u && user?.admin) openSheet(close => <UserDetail id={u} onChanged={loadUsers} close={close} />)
+  }, [loc.search])
   if (!user?.admin) return null
 
   const openUser = id => openSheet(close => <UserDetail id={id} onChanged={loadUsers} close={close} />)
@@ -246,7 +289,7 @@ export default function Admin() {
 
   return <div className="narrow">
     <div className="hdr">
-      <div style={{ flex: 1 }}><h1 style={{ margin: 0 }}>Entrenador</h1>
+      <div style={{ flex: 1 }}><h1 style={{ margin: 0 }}>Deportistas</h1>
         <div className="sub">{users ? users.length + ' usuarios · ' + activeCount + ' activos esta semana' : 'Cargando…'}</div></div>
       <button className="iconbtn" onClick={() => { loadUsers(); loadInvites() }} aria-label="actualizar">↻</button>
     </div>

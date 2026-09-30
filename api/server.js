@@ -18,6 +18,10 @@ import { dietRoutes } from './diet/routes.js';
 import { billingRoutes, billingReminders } from './billing/routes.js';
 import { messageRoutes } from './messages/routes.js';
 import { authRoutes } from './auth/routes.js';
+import { buildDashboard } from './trainer/dashboard.js';
+import * as trainerStore from './trainer/store.js';
+import * as billingStore from './billing/store.js';
+import * as messageStore from './messages/store.js';
 
 const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
@@ -594,7 +598,19 @@ const routes = {
   /* ---------- EM Fitness: monthly fees, chat, username + password accounts ---------- */
   ...billingRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users }),
   ...messageRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, isAdmin, readState, sendPush }),
-  ...authRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, saveDb, sessionCookie, isAdmin, publicUser })
+  ...authRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, saveDb, sessionCookie, isAdmin, publicUser }),
+
+  /* ---------- EM Fitness: the trainer's dashboard (fase 5) ---------- */
+  'GET /api/trainer/dashboard': async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    json(res, 200, buildDashboard({
+      users: db.users, isAdmin, readState,
+      assignments: uid => trainerStore.live(uid),
+      billing: uid => billingStore.read(uid),
+      unread: uid => messageStore.unread(messageStore.read(uid), 'trainer'),
+      todayFor: uid => billingToday(uid).date
+    }));
+  }
 };
 
 // EM Fitness: fee reminders. Each athlete's "today" is by their own clock (the zone the app
