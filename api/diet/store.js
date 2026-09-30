@@ -33,8 +33,16 @@ export function read(uid) {
   return rec && !rec.removed ? rec : null;
 }
 
+/**
+ * `since` is when the athlete first got a diet and survives new revisions, so diet adherence
+ * counts from then; it restarts after a removal. A diet saved before it existed takes its
+ * last revision's date, the earliest one known.
+ */
 export function save(uid, diet) {
-  const rec = { ...diet, rev: (readRaw(uid)?.rev || 0) + 1, at: Date.now() };
+  const prev = readRaw(uid);
+  const now = Date.now();
+  const since = prev && !prev.removed ? prev.since || prev.at : now;
+  const rec = { ...diet, rev: (prev?.rev || 0) + 1, at: now, since };
   write(uid, rec);
   return rec;
 }

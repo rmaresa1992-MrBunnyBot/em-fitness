@@ -7,13 +7,16 @@
  * Alerts, most serious first:
  *   high    pain reported on an exercise (last 14 days)
  *   medium  discomfort reported · adherence under 75 % over the last 4 weeks · no workout for
- *           7+ days with sessions planned · monthly fee overdue
+ *           7+ days with sessions planned · monthly fee overdue · diet kept under 75 % over
+ *           the last 7 days (at least 3 of them with the diet)
  *   low     sets done under the prescribed weight · unread messages · plan not synced yet
  */
 import { adherence, addDays, weekStart, daysBetween, workoutOk, plannedSet, SUCCESS } from './adherence.js';
+import { recentDietAdherence } from '../diet/adherence.js';
 
 export const WINDOW_DAYS = 14;
 export const INACTIVE_DAYS = 7;
+export const DIET_MIN_DAYS = 3;
 const SEVERITY = { high: 0, medium: 1, low: 2 };
 
 const localDay = ms => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -26,8 +29,9 @@ const localDay = ms => { const d = new Date(ms); return `${d.getFullYear()}-${St
  * @param unread       uid -> unread messages from the athlete
  * @param todayFor     uid -> 'YYYY-MM-DD' in the athlete's own calendar
  * @param isAdmin      user -> bool
+ * @param diet         uid -> the athlete's current diet or null (optional)
  */
-export function buildDashboard({ users, readState, assignments, billing, unread, todayFor, isAdmin }) {
+export function buildDashboard({ users, readState, assignments, billing, unread, todayFor, isAdmin, diet = () => null }) {
   const rows = [], alerts = [];
   const push = (a) => alerts.push(a);
 
@@ -69,16 +73,20 @@ export function buildDashboard({ users, readState, assignments, billing, unread,
     const overdue = fee && fee.due < today ? fee.due : null;
     const msgs = unread(u.id) || 0;
     const synced = !live.length || hasPlan;
+    const dd = diet(u.id);
+    const da = dd ? recentDietAdherence(S, dd, today) : null;
 
     rows.push({
       id: u.id, name: u.name, week, month, lastWorkout: lastOk, idle,
-      reports, under: under.length, overdue, unread: msgs, synced, hasPlan
+      reports, under: under.length, overdue, unread: msgs, synced, hasPlan,
+      diet: da ? { rate: da.rate, evaluated: da.evaluated, logged: da.logged } : null
     });
 
     const who = { athlete: u.id, name: u.name };
     for (const r of reports) push({ ...who, kind: r.lvl, severity: r.lvl === 'pain' ? 'high' : 'medium', d: r.d, exId: r.exId, zone: r.zone, note: r.note });
     if (month.planned >= 2 && month.rate < SUCCESS) push({ ...who, kind: 'adherence', severity: 'medium', done: month.done, planned: month.planned, rate: month.rate });
     if (hasPlan && idle != null && idle >= INACTIVE_DAYS) push({ ...who, kind: 'inactive', severity: 'medium', days: idle });
+    if (da && da.evaluated >= DIET_MIN_DAYS && da.rate < SUCCESS) push({ ...who, kind: 'diet', severity: 'medium', rate: da.rate, days: da.evaluated, logged: da.logged });
     if (overdue) push({ ...who, kind: 'fee', severity: 'medium', due: overdue });
     if (under.length >= 2) push({ ...who, kind: 'underweight', severity: 'low', count: under.length, exIds: [...new Set(under.map(x => x.exId))] });
     if (msgs) push({ ...who, kind: 'message', severity: 'low', count: msgs });

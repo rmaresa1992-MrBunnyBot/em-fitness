@@ -860,4 +860,15 @@ export default {
   "House": "Дом",
   "Place": "Место",
   "Two weeks in a row under 75% and it faints.": "Две недели подряд ниже 75% — и она упадёт в обморок.",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "Капибара",
+  "Yesterday": "Вчера",
+  "Training day": "День тренировки",
+  "Eaten": "Съедено",
+  "Partly": "Частично",
+  "Skipped": "Пропущено",
+  "Diet kept, last 7 days": "Соблюдение диеты, последние 7 дней",
+  "No full days yet": "Пока нет полных дней",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "Отмечай каждый приём пищи после еды — тренер видит, как у тебя дела.",
+  "Marked {0} of {1}": "Отмечено {0} из {1}",
 }

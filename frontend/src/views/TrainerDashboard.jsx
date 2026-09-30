@@ -30,6 +30,11 @@ function describe(a) {
       }
     case 'adherence': return { title: 'Cumplimiento ' + pct(a.rate), detail: a.done + ' de ' + a.planned + ' entrenos en las últimas 4 semanas' }
     case 'inactive': return { title: a.days + ' días sin entrenar', detail: 'Tiene sesiones en su plan y no ha completado ninguna' }
+    case 'diet': return {
+      title: 'Dieta al ' + pct(a.rate),
+      detail: 'Últimos ' + a.days + ' días' + (a.logged < a.days ? ' · ' + (a.days - a.logged) + ' sin registrar' : ''),
+      to: '/admin/diet/' + a.athlete + '?from=nutricion'
+    }
     case 'fee': return { title: 'Mensualidad vencida', detail: 'Venció el ' + fmtDate(a.due) }
     case 'underweight': return { title: a.count + ' series por debajo del peso indicado', detail: a.exIds.map(exName).join(', ') }
     case 'message': return { title: a.count === 1 ? '1 mensaje sin leer' : a.count + ' mensajes sin leer', detail: 'Te escribió en el chat', to: '/admin/messages/' + a.athlete }

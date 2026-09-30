@@ -22,6 +22,7 @@ import { buildDashboard } from './trainer/dashboard.js';
 import * as trainerStore from './trainer/store.js';
 import * as billingStore from './billing/store.js';
 import * as messageStore from './messages/store.js';
+import * as dietStore from './diet/store.js';
 
 const PORT = +(process.env.PORT || 3000);
 const DATA = process.env.DATA_DIR || '/data';
@@ -595,7 +596,7 @@ const routes = {
   ...trainerRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush }),
 
   /* ---------- EM Fitness: trainer sends diets ---------- */
-  ...dietRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush }),
+  ...dietRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users, readState, sendPush, todayFor: uid => billingToday(uid).date }),
 
   /* ---------- EM Fitness: monthly fees, chat, username + password accounts ---------- */
   ...billingRoutes({ json, readBody, readSession, requireAdmin, users: () => db.users }),
@@ -610,7 +611,8 @@ const routes = {
       assignments: uid => trainerStore.live(uid),
       billing: uid => billingStore.read(uid),
       unread: uid => messageStore.unread(messageStore.read(uid), 'trainer'),
-      todayFor: uid => billingToday(uid).date
+      todayFor: uid => billingToday(uid).date,
+      diet: uid => dietStore.read(uid)
     }));
   }
 };

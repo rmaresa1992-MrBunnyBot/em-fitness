@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { todayISO } from '../lib/format.js'
@@ -49,14 +48,17 @@ function RenameSheet({ close }) {
 }
 
 export default function Pet() {
-  const nav = useNavigate()
   const S = useStore(s => s.S)
   const update = useStore(s => s.update)
   const toast = useUI(s => s.toast)
   const [tab, setTab] = useState('wardrobe')
   const today = todayISO()
   const st = S.pet ? petStatus(S, today) : null
-  if (!st) return <div className="empty">{t('Your capybara arrives with your first routine.')}</div>
+  // A tab of its own now (EM Fitness): the header stays even before the capybara is born.
+  if (!st) return <>
+    <div className="hdr"><div><h1>{t('Capybara')}</h1></div></div>
+    <div className="empty"><div className="ico"><Icon name="paw" /></div>{t('Your capybara arrives with your first routine.')}</div>
+  </>
   const owned = new Set(S.pet.owned || [])
   const wear = S.pet.wear || {}
 
@@ -69,8 +71,7 @@ export default function Pet() {
 
   return <div className="narrow">
     <div className="hdr">
-      <button className="iconbtn" onClick={() => nav('/home')} aria-label={t('Home')}><Icon name="chevronLeft" /></button>
-      <div style={{ flex: 1, marginLeft: 12 }}>
+      <div style={{ flex: 1 }}>
         <h1 onClick={() => useUI.getState().openSheet(close => <RenameSheet close={close} />)} style={{ cursor: 'pointer' }}>{S.pet.name} <Icon name="pencil" style={{ display: 'inline-block', fontSize: 18, color: 'var(--label-3)' }} /></h1>
         <div className="sub">{t(MOOD_NAME[st.mood])}</div>
       </div>

@@ -860,4 +860,15 @@ export default {
   "House": "집",
   "Place": "장소",
   "Two weeks in a row under 75% and it faints.": "2주 연속 75% 미만이면 기절해요.",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "카피바라",
+  "Yesterday": "어제",
+  "Training day": "운동하는 날",
+  "Eaten": "먹음",
+  "Partly": "일부",
+  "Skipped": "건너뜀",
+  "Diet kept, last 7 days": "최근 7일 식단 이행",
+  "No full days yet": "아직 완료된 날이 없어요",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "식사를 마치면 표시하세요. 트레이너가 진행 상황을 봅니다.",
+  "Marked {0} of {1}": "{1}개 중 {0}개 표시",
 }

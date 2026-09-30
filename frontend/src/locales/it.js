@@ -860,4 +860,15 @@ export default {
   "House": "Casa",
   "Place": "Luogo",
   "Two weeks in a row under 75% and it faints.": "Due settimane di fila sotto il 75% e sviene.",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "Capibara",
+  "Yesterday": "Ieri",
+  "Training day": "Giorno di allenamento",
+  "Eaten": "Mangiato",
+  "Partly": "In parte",
+  "Skipped": "Saltato",
+  "Diet kept, last 7 days": "Dieta seguita, ultimi 7 giorni",
+  "No full days yet": "Ancora nessun giorno completo",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "Segna ogni pasto dopo averlo mangiato: il tuo allenatore vede come va.",
+  "Marked {0} of {1}": "{0} di {1} segnati",
 }

@@ -860,4 +860,15 @@ export default {
   "House": "घर",
   "Place": "जगह",
   "Two weeks in a row under 75% and it faints.": "लगातार दो हफ़्ते 75% से कम रहे तो वह बेहोश हो जाएगा।",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "कैपिबारा",
+  "Yesterday": "कल",
+  "Training day": "ट्रेनिंग का दिन",
+  "Eaten": "खा लिया",
+  "Partly": "आंशिक",
+  "Skipped": "छोड़ दिया",
+  "Diet kept, last 7 days": "पिछले 7 दिन, डाइट का पालन",
+  "No full days yet": "अभी कोई पूरा दिन नहीं",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "हर खाना खाने के बाद उसे मार्क करें — आपके ट्रेनर देखते हैं कि कैसा चल रहा है।",
+  "Marked {0} of {1}": "{1} में से {0} मार्क किए",
 }

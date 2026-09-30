@@ -860,4 +860,15 @@ export default {
   "House": "房子",
   "Place": "地点",
   "Two weeks in a row under 75% and it faints.": "连续两周低于 75%，它就会晕倒。",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "水豚",
+  "Yesterday": "昨天",
+  "Training day": "训练日",
+  "Eaten": "已吃",
+  "Partly": "部分",
+  "Skipped": "跳过",
+  "Diet kept, last 7 days": "近 7 天饮食执行情况",
+  "No full days yet": "还没有完整的天数",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "每餐吃完后标记一下——教练能看到你的进展。",
+  "Marked {0} of {1}": "已标记 {0}/{1}",
 }

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { num, sumFoods, dayTotals, mealTotals, fmtMacro, progress, toForm, fromForm, formTotals, emptyFood } from './diet.js'
+import {
+  num, sumFoods, dayTotals, mealTotals, fmtMacro, progress, toForm, fromForm, formTotals, emptyFood,
+  mealsOf, targetsOf, hasRest, variantFor, dayVariant, markMeal, dayScore, dietAdherence, recentDietAdherence,
+  canMark, restFromTraining, withCatalog, addDays, KEEP_DAYS
+} from './diet.js'
 
 describe('num', () => {
   it('reads numbers as typed on a phone', () => {
@@ -52,8 +56,10 @@ describe('form ↔ diet', () => {
     name: 'Volumen', notes: 'Agua 3 L', targets: { kcal: 2800, p: 180 },
     meals: [{ name: 'Desayuno', time: '08:00', foods: [{ name: 'Avena', qty: 80, unit: 'g', kcal: 300, p: 10 }] }]
   }
-  it('round-trips a stored diet unchanged', () => {
-    expect(fromForm(toForm(stored))).toEqual(stored)
+  it('round-trips a stored diet unchanged, giving id-less meals their position as id', () => {
+    const back = fromForm(toForm(stored))
+    expect(back).toEqual({ ...stored, meals: [{ ...stored.meals[0], id: 't0' }] })
+    expect(fromForm(toForm(back))).toEqual(back)
   })
   it('starts a new diet with three meals ready to fill', () => {
     const f = toForm(null)
@@ -69,7 +75,7 @@ describe('form ↔ diet', () => {
     expect(d.targets).toBeUndefined()
     expect(d.notes).toBeUndefined()
     expect(d.meals[0].foods).toEqual([{ name: 'Huevo', qty: 2, kcal: 150 }])
-    expect(d.meals[1]).toEqual({ name: 'Comida 2', foods: [] })
+    expect(d.meals[1]).toEqual({ id: expect.any(String), name: 'Comida 2', foods: [] })
     expect(d.meals[2].name).toBe('Cena')
   })
   it('keeps an explicit 0 — zero fat is a claim, blank is not', () => {

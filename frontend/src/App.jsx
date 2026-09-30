@@ -109,6 +109,7 @@ function Shell() {
               <Route path="/admin/diet/:id" element={user?.admin ? <TrainerDiet /> : <Navigate to="/home" replace />} />
               <Route path="/admin/messages/:id" element={user?.admin ? <TrainerMessages /> : <Navigate to="/home" replace />} />
               <Route path="/nutricion" element={user?.admin ? <TrainerNutrition /> : <Navigate to="/diet" replace />} />
+              <Route path="/nutricion/plantilla/:tid" element={user?.admin ? <TrainerDiet template /> : <Navigate to="/diet" replace />} />
               <Route path="/capibara" element={isAthlete(user) ? <Pet /> : <Navigate to="/home" replace />} />
               <Route path="/messages" element={user && !user.admin ? <Messages /> : <Navigate to="/home" replace />} />
               <Route path="*" element={<Navigate to="/home" replace />} />

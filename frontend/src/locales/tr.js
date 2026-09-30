@@ -860,4 +860,15 @@ export default {
   "House": "Ev",
   "Place": "Yer",
   "Two weeks in a row under 75% and it faints.": "Üst üste iki hafta %75’in altında kalırsan bayılır.",
+  // EM Fitness fase 7b: capybara tab, diet log
+  "Capybara": "Kapibara",
+  "Yesterday": "Dün",
+  "Training day": "Antrenman günü",
+  "Eaten": "Yendi",
+  "Partly": "Kısmen",
+  "Skipped": "Atlandı",
+  "Diet kept, last 7 days": "Diyete uyum, son 7 gün",
+  "No full days yet": "Henüz tamamlanan gün yok",
+  "Mark each meal after you eat it — your trainer sees how it goes.": "Her öğünü yedikten sonra işaretle; antrenörün nasıl gittiğini görür.",
+  "Marked {0} of {1}": "{1} öğünden {0} işaretlendi",
 }

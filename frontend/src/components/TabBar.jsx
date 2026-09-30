@@ -31,12 +31,14 @@ export default function TabBar() {
   return (
     // Two halves around the disc, so it stays dead centre whichever tabs this account has.
     <nav id="tabbar">
-      {/* EM Fitness: an athlete's three tabs are Plan | Inicio | Dieta — the diet tab is always
-          there, with its empty state until the trainer sends one. The trainer's are Rutinas |
-          Tablero | Deportistas (Spanish on purpose, D6). No exercise library for anyone (D14). */}
+      {/* EM Fitness: an athlete's tabs are Plan, Nutrición | Inicio | Capibara — the diet tab is
+          always there, with its empty state until the trainer sends one. The trainer's are
+          Rutinas, Nutrición | Tablero | Deportistas (Spanish on purpose, D6). No exercise library
+          for anyone (D14). */}
       <div className="side">
         <Tab k="plan" icon="calendar" to="/plan" label={trainer ? 'Rutinas' : t('Plan')} />
-        {trainer && <Tab k="nutricion" icon="apple" to="/nutricion" label="Nutrición" />}
+        {trainer ? <Tab k="nutricion" icon="apple" to="/nutricion" label="Nutrición" />
+          : (athlete || hasDiet) && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
       </div>
       <button className={'start' + (running ? ' rec' : on('home') ? ' on' : '')} onClick={center} aria-current={on('home') ? 'page' : undefined}>
         <span className="cir"><Icon name={running ? 'play' : trainer ? 'chart' : 'house'} /></span>
@@ -44,7 +46,7 @@ export default function TabBar() {
       </button>
       <div className="side">
         {trainer ? <Tab k="admin" icon="person" to="/admin" label="Deportistas" />
-          : (athlete || hasDiet) && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
+          : athlete && <Tab k="capibara" icon="paw" to="/capibara" label={t('Capybara')} />}
       </div>
     </nav>
   )
