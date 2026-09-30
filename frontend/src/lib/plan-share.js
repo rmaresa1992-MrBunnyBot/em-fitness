@@ -9,7 +9,7 @@
 //     a page break — each exercise, and each routine that fits, stays in one place.
 
 import { EXIDX } from './exercises.js'
-import { modeOf, fmtSec } from './history.js'
+import { modeOf, fmtSec, schemeOf, fmtScheme } from './history.js'
 import { uid, todayISO, DAYN, fmtNum, exCount } from './format.js'
 import { t, nameOf } from './i18n.js'
 
@@ -32,6 +32,10 @@ function cleanEx(e) {
   } else {
     if (e.reps != null) o.reps = e.reps
     if (e.weight) o.weight = e.weight
+    // EM Fitness: a drop set travels with its per-set reps and weights (also to athletes —
+    // trainer assignments are built from this bundle).
+    const drop = schemeOf(e)
+    if (drop) { o.scheme = drop; o.sets = drop.length }
   }
   // Progression settings travel with the plan — a shared Greyskull routine that arrives
   // without its rule is just a list of weights.
@@ -144,6 +148,8 @@ function scheme(e, unit) {
     const body = `${e.min || 20} min @ ${fmtNum(e.speed || 8)} km/h`
     return sets > 1 ? `${sets} × ${body}` : body
   }
+  const drop = schemeOf(e)
+  if (drop) return fmtScheme(drop, unit)
   let s = mode === 'time' ? `${sets} × ${fmtSec(e.sec || 45)}` : `${sets} × ${e.reps ?? 10}`
   if (e.weight) s += ` · ${fmtNum(e.weight)} ${unit}`
   return s

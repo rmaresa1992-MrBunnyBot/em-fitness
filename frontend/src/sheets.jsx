@@ -3,7 +3,7 @@ import { useStore } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, allExercises, equipmentOf } from './lib/exercises.js'
 import { fmtDate, fmtNum, fmtVol, fmtDur, durPart, todayISO, uid, exCount, DAYN, MONTHS_LONG, ACCENTS } from './lib/format.js'
-import { lastEntryFor, bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, lastBW, supersetUnits, unitOf, setLabel, defaultConfig, cleanupSg, modeOf, effortOf } from './lib/history.js'
+import { lastEntryFor, bestWeightFor, buildSets, effectiveRoutineId, workoutVolume, setsDone, setsDoneActive, lastBW, supersetUnits, unitOf, setLabel, defaultConfig, cleanupSg, modeOf, effortOf, schemeOf, SCHEME_MIN, SCHEME_MAX } from './lib/history.js'
 import { beep, vibrate } from './lib/sound.js'
 import { t, instrFor, getLang, INSTR_LANGS, nameOf, nameMatches } from './lib/i18n.js'
 import { nav } from './lib/nav.js'
@@ -482,6 +482,18 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit }) {
   </>
 }
 
+// EM Fitness: a first drop set from the straight-set values already in the form — more reps
+// and less weight each set, like 10 × 30 → 15 × 20 → 20 × 10. The trainer then adjusts it.
+const snapW = w => Math.max(0, Math.round(w / 2.5) * 2.5)
+function seedScheme(c) {
+  const r = Math.max(1, Math.round(c.reps) || 10), w = Math.max(0, +c.weight || 0)
+  return [{ r, w }, { r: r + 5, w: snapW(w * 2 / 3) }, { r: r + 10, w: snapW(w / 3) }]
+}
+function nextDropRow(rows) {
+  const last = rows[rows.length - 1], prev = rows[rows.length - 2] || last
+  return { r: last.r + Math.max(1, last.r - prev.r), w: snapW(last.w - Math.max(2.5, prev.w - last.w)) }
+}
+
 function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
   const st = useStore(s => s.S)
   const cardio = isCardio(ex.id)
@@ -491,8 +503,18 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
   const mode = cardio ? 'cardio' : modeOf({ ...c, id: ex.id })
   // Keep whatever the other mode already had (sets, weight) and fill only what is missing.
   const setMode = m => setC(x => ({ ...defaultConfig(ex.id, m), ...x, mode: m }))
+  // EM Fitness: drop set ("serie descendente") — one reps/weight per set, reps mode only.
+  const [drop, setDrop] = useState(() => schemeOf(existing))
+  const dropOn = mode === 'reps' && !!drop
+  const toggleDrop = on => setDrop(on ? seedScheme(c) : null)
+  const editRow = (i, k, v) => setDrop(rows => rows.map((s, j) => j === i ? { ...s, [k]: v } : s))
   const save = () => {
     close()
+    if (dropOn) {
+      const rows = drop.map(s => ({ r: Math.max(1, Math.round(s.r) || 1), w: Math.max(0, +s.w || 0) }))
+      onSave({ sets: rows.length, mode: 'reps', reps: rows[0].r, weight: rows[0].w, scheme: rows })
+      return
+    }
     const sets = Math.max(1, Math.round(c.sets) || (cardio ? 1 : 3))
     // Only carry progression settings that differ from the inherited default, so a plan file
     // stays readable and "follow the routine" keeps meaning exactly that.
@@ -520,6 +542,24 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
       <Segmented className="seg-range" value={mode} onChange={setMode}
         options={[{ value: 'reps', label: t('Reps') }, { value: 'time', label: t('Time') }]} />
     </div>}
+    {mode === 'reps' && <div className="sect-b" style={{ marginBottom: 14 }}>
+      <div className="lrow">
+        <span className="lrow-m"><span className="lrow-t">{t('Drop set')}</span>
+          <span className="lrow-s">{t('Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.')}</span></span>
+        <Switch checked={dropOn} onChange={toggleDrop} />
+      </div>
+    </div>}
+    {dropOn ? <div style={{ marginBottom: 18 }}>
+      {drop.map((s, i) => <div key={i} className="row cfgrow" style={{ marginBottom: 8, alignItems: 'flex-end' }}>
+        <div style={{ flex: 'none', width: 52, paddingBottom: 12, fontWeight: 600, fontSize: 15 }} className="muted">{t('Set {0}', i + 1)}</div>
+        <Stepper label={t('Reps')} value={s.r} step={1} decimal={false} onChange={v => editRow(i, 'r', v)} />
+        <Stepper label={t('Weight ({0})', st.unit)} value={s.w} step={2.5} onChange={v => editRow(i, 'w', v)} />
+        <button className="iconbtn" style={{ flex: 'none', marginBottom: 6, visibility: drop.length > SCHEME_MIN ? 'visible' : 'hidden' }}
+          onClick={() => setDrop(rows => rows.filter((_, j) => j !== i))} aria-label={t('Remove set {0}', i + 1)}><Icon name="minus" /></button>
+      </div>)}
+      {drop.length < SCHEME_MAX && <Button size="sm" icon="plus" onClick={() => setDrop(rows => [...rows, nextDropRow(rows)])}>{t('Add set')}</Button>}
+      <div className="small dim" style={{ marginTop: 10 }}>{t('A drop set keeps the reps and weights you set here — no automatic progression.')}</div>
+    </div> : <>
     <div className="row cfgrow" style={{ marginBottom: mode === 'time' ? 8 : 18 }}>
       {cardio ? <>
         <Stepper label={t('Intervals')} value={c.sets} step={1} decimal={false} onChange={v => setC(x => ({ ...x, sets: v }))} />
@@ -539,6 +579,7 @@ function ExConfig({ ex, existing, onSave, onDelete, close, routine }) {
       {t('A timer runs while you hold the set. Leave the weight at 0 for bodyweight holds.')}
     </div>}
     <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} />
+    </>}
     <Button variant="primary" onClick={save}>{existing ? t('Save') : t('Add to routine')}</Button>
     {ex.custom && <><div style={{ height: 8 }} /><Button icon="pencil" onClick={() => { close(); customExSheet(ex) }}>{t('Edit or delete this exercise')}</Button></>}
     {onDelete && <><div style={{ height: 8 }} /><Button variant="danger" onClick={() => { close(); onDelete() }}>{t('Remove from routine')}</Button></>}

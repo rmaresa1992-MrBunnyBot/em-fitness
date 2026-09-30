@@ -142,3 +142,13 @@ test('a failing push does not fail the assignment', async () => {
   await flaky['POST /api/trainer/assign']({ body: { athletes: ['luis'], routine: routine({ id: 'r-y' }), days: [] } }, res);
   assert.equal(res.code, 200);
 });
+
+test('a drop set (serie descendente) travels with its per-set reps and weights', async () => {
+  const drop = { id: '0001', sets: 3, mode: 'reps', reps: 10, weight: 30, scheme: [{ r: 10, w: 30 }, { r: 15, w: 20 }, { r: 20, w: 10 }] };
+  const r = await assign({ athletes: ['luis'], routine: routine({ id: 'r-drop', ex: [drop] }), days: [2] });
+  assert.equal(r.code, 200);
+  const got = (await mine('luis')).body.assignments.find(a => a.rid === 'r-drop');
+  assert.deepEqual(got.routine.ex[0].scheme, drop.scheme);
+  for (const bad of [[{ r: 10, w: 30 }], [{ r: 0, w: 30 }, { r: 5, w: 10 }], [{ r: 10, w: -1 }, { r: 5, w: 10 }], Array(11).fill({ r: 5, w: 5 })])
+    assert.equal((await assign({ athletes: ['luis'], routine: routine({ id: 'r-bad', ex: [{ ...drop, scheme: bad }] }), days: [] })).code, 400, JSON.stringify(bad).slice(0, 40));
+});

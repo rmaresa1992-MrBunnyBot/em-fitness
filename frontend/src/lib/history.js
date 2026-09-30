@@ -17,6 +17,21 @@ export function modeOf(cfg) {
 }
 export const isTimed = cfg => modeOf(cfg) === 'time'
 
+// EM Fitness: drop set ("serie descendente"). A reps exercise may carry `scheme`, one
+// { r, w } per set — e.g. 10 × 30 kg, 15 × 20 kg, 20 × 10 kg — instead of one reps/weight for
+// every set. `sets`, `reps` and `weight` still mirror the count and the first set, so code that
+// only knows the old fields still reads something sensible. Plan files and trainer assignments
+// can bring it in from elsewhere, so it is read through here and never trusted raw.
+export const SCHEME_MIN = 2
+export const SCHEME_MAX = 10
+export function schemeOf(cfg) {
+  if (!cfg || modeOf(cfg) !== 'reps' || !Array.isArray(cfg.scheme)) return null
+  const ok = n => typeof n === 'number' && Number.isFinite(n) && n >= 0
+  const rows = cfg.scheme.filter(s => s && ok(s.r) && s.r >= 1 && ok(s.w))
+    .slice(0, SCHEME_MAX).map(s => ({ r: Math.round(s.r), w: s.w }))
+  return rows.length >= SCHEME_MIN ? rows : null
+}
+
 // mm:ss for a work duration — seconds alone read badly past a minute ("90 s" vs "1:30").
 export function fmtSec(sec) {
   const n = Math.max(0, Math.round(Number(sec) || 0))
@@ -89,7 +104,15 @@ export function exLine(cfg, unit) {
   const load = cfg.weight ? ' · ' + fmtNum(cfg.weight) + ' ' + unit : ''
   if (mode === 'cardio') return `${n} × ${cfg.min || 20} min @ ${fmtNum(cfg.speed || 8)} km/h`
   if (mode === 'time') return `${n} × ${fmtSec(cfg.sec || 45)}${load}`
+  const drop = schemeOf(cfg)
+  if (drop) return fmtScheme(drop, unit)
   return `${n} × ${cfg.reps}${load}`
+}
+
+// "10 × 30 → 15 × 20 → 20 × 10 kg"; reps alone when every set is bodyweight.
+export function fmtScheme(rows, unit) {
+  if (rows.every(s => !s.w)) return rows.map(s => s.r).join(' → ')
+  return rows.map(s => `${s.r} × ${fmtNum(s.w)}`).join(' → ') + ' ' + unit
 }
 
 // Drop superset ids that no longer have an adjacent partner (after unlink/reorder/remove).
@@ -155,6 +178,10 @@ export function buildSets(S, cfg) {
     }
     return sets
   }
+  // A drop set is prescribed set by set: last time's weights and the remembered top weight
+  // would flatten it back into straight sets, so neither applies.
+  const drop = schemeOf(cfg)
+  if (drop) return drop.map(s => ({ w: s.w, r: s.r, done: false }))
   const conf = S.exWeights[cfg.id]
   for (let i = 0; i < n; i++) {
     const prev = prevAt(i)

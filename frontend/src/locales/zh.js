@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "新密码至少需要 8 个字符",
   "The two new passwords don’t match": "两次输入的新密码不一致",
   "Password changed — other devices were signed out": "密码已修改——其他设备已退出登录",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "递减组",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "每组有各自的次数和重量，例如 10 × 30、15 × 20、20 × 10。",
+  "Set {0}": "第 {0} 组",
+  "Remove set {0}": "删除第 {0} 组",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "递减组保持你在这里设定的次数和重量——不自动递进。",
 }

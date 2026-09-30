@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "새 비밀번호는 8자 이상이어야 해요",
   "The two new passwords don’t match": "두 새 비밀번호가 일치하지 않아요",
   "Password changed — other devices were signed out": "비밀번호를 바꿨어요 — 다른 기기에서 로그아웃됐어요",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "드롭 세트",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "세트마다 횟수와 무게를 따로 정해요. 예: 10 × 30, 15 × 20, 20 × 10.",
+  "Set {0}": "{0}세트",
+  "Remove set {0}": "{0}세트 삭제",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "드롭 세트는 여기서 정한 횟수와 무게를 그대로 유지해요 — 자동 진행 없음.",
 }

@@ -16,7 +16,7 @@
 //   · fewer sets than prescribed                       → miss
 // So a session that fell apart can never advance the load as though it had succeeded.
 
-import { modeOf } from './history.js'
+import { modeOf, schemeOf } from './history.js'
 import { EXIDX } from './exercises.js'
 
 export const POLICIES = ['off', 'linear', 'greyskull', 'double', 'time']
@@ -64,6 +64,9 @@ export const DEFAULT_SEC_INCREMENT = 5
 // The policy in force for one exercise: its own override, else the routine's default, else
 // the mode's default. Reps keeps behaving the way the app always did (all reps → add a step).
 export function policyFor(cfg, routine, mode) {
+  // EM Fitness: every policy writes one weight/reps into all sets, which would flatten a drop
+  // set; its sets are prescribed by hand (history.js schemeOf).
+  if (schemeOf(cfg)) return 'off'
   const m = mode || modeOf(cfg || {})
   const allowed = POLICIES_FOR[m] || ['off']
   const pick = (cfg && cfg.prog) || (routine && routine.prog) || (m === 'reps' ? 'linear' : 'off')

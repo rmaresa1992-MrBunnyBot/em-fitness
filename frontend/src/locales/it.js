@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "La nuova password deve avere almeno 8 caratteri",
   "The two new passwords don’t match": "Le due nuove password non coincidono",
   "Password changed — other devices were signed out": "Password cambiata — gli altri dispositivi sono stati disconnessi",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "Serie discendente",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "Ogni serie con le sue ripetizioni e il suo peso, ad es. 10 × 30, 15 × 20, 20 × 10.",
+  "Set {0}": "Serie {0}",
+  "Remove set {0}": "Rimuovi serie {0}",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "Una serie discendente mantiene le ripetizioni e i pesi impostati qui: nessuna progressione automatica.",
 }

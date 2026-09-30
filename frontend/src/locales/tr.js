@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "Yeni şifre en az 8 karakter olmalı",
   "The two new passwords don’t match": "İki yeni şifre eşleşmiyor",
   "Password changed — other devices were signed out": "Şifre değişti — diğer cihazlarda oturum kapatıldı",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "Azalan set",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "Her set kendi tekrar ve ağırlığıyla, ör. 10 × 30, 15 × 20, 20 × 10.",
+  "Set {0}": "Set {0}",
+  "Remove set {0}": "{0}. seti kaldır",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "Azalan set burada girdiğin tekrar ve ağırlıkları korur — otomatik ilerleme yok.",
 }

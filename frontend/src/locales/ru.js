@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "Новый пароль должен быть не короче 8 символов",
   "The two new passwords don’t match": "Новые пароли не совпадают",
   "Password changed — other devices were signed out": "Пароль изменён — на других устройствах выполнен выход",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "Нисходящий подход",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "У каждого подхода свои повторения и вес, например 10 × 30, 15 × 20, 20 × 10.",
+  "Set {0}": "Подход {0}",
+  "Remove set {0}": "Удалить подход {0}",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "Нисходящий подход сохраняет заданные здесь повторения и веса — без автоматической прогрессии.",
 }

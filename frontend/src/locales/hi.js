@@ -774,4 +774,10 @@ export default {
   "The new password needs at least 8 characters": "नए पासवर्ड में कम से कम 8 अक्षर होने चाहिए",
   "The two new passwords don’t match": "दोनों नए पासवर्ड मेल नहीं खाते",
   "Password changed — other devices were signed out": "पासवर्ड बदल गया — दूसरे डिवाइस से साइन आउट कर दिया गया",
+  // EM Fitness: drop set (serie descendente)
+  "Drop set": "ड्रॉप सेट",
+  "Each set with its own reps and weight, e.g. 10 × 30, 15 × 20, 20 × 10.": "हर सेट के अपने रेप्स और वज़न, जैसे 10 × 30, 15 × 20, 20 × 10।",
+  "Set {0}": "सेट {0}",
+  "Remove set {0}": "सेट {0} हटाएँ",
+  "A drop set keeps the reps and weights you set here — no automatic progression.": "ड्रॉप सेट यहाँ तय किए रेप्स और वज़न ही रखता है — कोई ऑटोमैटिक प्रोग्रेशन नहीं।",
 }
