@@ -859,4 +859,5 @@ export default {
   "Body": "身体",
   "House": "房子",
   "Place": "地点",
+  "Two weeks in a row under 75% and it faints.": "连续两周低于 75%，它就会晕倒。",
 }

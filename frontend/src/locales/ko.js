@@ -859,4 +859,5 @@ export default {
   "Body": "몸",
   "House": "집",
   "Place": "장소",
+  "Two weeks in a row under 75% and it faints.": "2주 연속 75% 미만이면 기절해요.",
 }

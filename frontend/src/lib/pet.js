@@ -9,11 +9,12 @@
 // capybara alive. So a week's upkeep costs exactly what 75 % of that week's sessions bring in:
 //   gain per session  = 100 / P            (P = sessions planned that week)
 //   daily upkeep      = 0.75 · 100 / 7
-// 100 % fills it up, 75 % holds it steady, less drains it until it faints. A week with nothing
-// planned costs nothing: the capybara sleeps.
+// 100 % fills it up, 75 % holds it steady, less drains it. A week with nothing planned costs
+// nothing: the capybara sleeps. Fainting is a separate, predictable rule (owner, 2026-09-29):
+// two calendar weeks in a row under 75 % of the plan, whatever the meters say.
 import { effectiveRoutineId } from './history.js'
 import { isoOf, weekKey } from './format.js'
-import { workoutOk, weekStart } from './adherence.js'
+import { workoutOk, weekStart, SUCCESS } from './adherence.js'
 import { ITEM } from './pet-items.js'
 
 export const START = 70            // food and water on the first day
@@ -23,6 +24,8 @@ export const COINS_PER_WORKOUT = 10
 export const COINS_FULL_WEEK = 30
 export const MISS_PENALTY = 20     // happiness lost per planned session missed in the last 7 days
 export const HAPPY = 60
+export const FAIL_WEEKS = 2        // weeks in a row under 75 % before it faints (owner's rule)
+export const FLOOR = 3             // the meters bottom out here until it actually faints
 
 const parse = iso => new Date(iso + 'T12:00:00')
 const addDays = (iso, n) => { const d = parse(iso); d.setDate(d.getDate() + n); return isoOf(d) }
@@ -64,11 +67,12 @@ export function petStatus(S, today) {
   }
 
   let food = START, water = START, earned = 0, fainted = false
-  let wk = null, wkDone = 0
+  let wk = null, wkDone = 0, wkPlanned = 0, failStreak = 0
   for (let d = pet.born; d <= today; d = addDays(d, 1)) {
     const k = weekKey(d)
-    if (k !== wk) { wk = k; wkDone = 0 }
+    if (k !== wk) { wk = k; wkDone = 0; wkPlanned = 0 }
     const P = planned(d)
+    if (effectiveRoutineId(S, d)) wkPlanned++          // only days since its birth are judged
     const ratio = byDay.get(d)
     // Sessions count up to what the week planned: extra ones earn nothing, so it can't be farmed.
     if (ratio != null && P > 0 && wkDone < P) {
@@ -78,13 +82,21 @@ export function petStatus(S, today) {
       if (wkDone === P) {
         earned += COINS_FULL_WEEK
         // D15: the day a whole week is done, a fainted capybara wakes up with everything it had.
-        if (fainted) { fainted = false; food = REVIVE; water = REVIVE }
+        if (fainted) { fainted = false; food = REVIVE; water = REVIVE; failStreak = 0 }
       }
     }
     if (!fainted && P > 0) {
-      food = clamp(food - UPKEEP)
-      water = clamp(water - UPKEEP)
-      if (Math.min(food, water) <= 0) { fainted = true; food = 0; water = 0 }
+      // The meters show it getting hungry and tired, but they don't decide when it faints:
+      // the owner's rule does (below), so they stop just above empty.
+      food = Math.max(FLOOR, food - UPKEEP)
+      water = Math.max(FLOOR, water - UPKEEP)
+    }
+    // End of the calendar week: a week under 75 % of its plan is a failed week, and two failed
+    // weeks in a row make it faint — at 50 % or at 0 % alike. A good week resets the count; a
+    // week with nothing planned doesn't count either way.
+    if (parse(d).getDay() === 0 && wkPlanned > 0) {
+      failStreak = Math.min(wkDone, wkPlanned) / wkPlanned < SUCCESS ? failStreak + 1 : 0
+      if (!fainted && failStreak >= FAIL_WEEKS) { fainted = true; food = 0; water = 0 }
     }
   }
 

@@ -859,4 +859,5 @@ export default {
   "Body": "Corpo",
   "House": "Casa",
   "Place": "Luogo",
+  "Two weeks in a row under 75% and it faints.": "Due settimane di fila sotto il 75% e sviene.",
 }

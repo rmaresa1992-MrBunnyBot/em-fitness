@@ -859,4 +859,5 @@ export default {
   "Body": "शरीर",
   "House": "घर",
   "Place": "जगह",
+  "Two weeks in a row under 75% and it faints.": "लगातार दो हफ़्ते 75% से कम रहे तो वह बेहोश हो जाएगा।",
 }

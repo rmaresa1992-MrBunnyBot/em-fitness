@@ -859,4 +859,5 @@ export default {
   "Body": "Vücut",
   "House": "Ev",
   "Place": "Yer",
+  "Two weeks in a row under 75% and it faints.": "Üst üste iki hafta %75’in altında kalırsan bayılır.",
 }

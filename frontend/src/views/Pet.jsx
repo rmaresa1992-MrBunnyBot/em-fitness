@@ -86,7 +86,7 @@ export default function Pet() {
       <Meter icon="apple" label={t('Food')} value={st.food} color="var(--acc-fill, var(--acc))" />
       <Meter icon="drop" label={t('Water')} value={st.water} color="#3b9ad9" />
       <Meter icon="heart" label={t('Happiness')} value={st.happy} color="#e0567a" />
-      <div className="small dim">{t('Each completed workout feeds it. Training at least 75% of your plan keeps it alive.')}</div>
+      <div className="small dim">{t('Each completed workout feeds it. Training at least 75% of your plan keeps it alive.')} {t('Two weeks in a row under 75% and it faints.')}</div>
     </div>
 
     <Segmented value={tab} onChange={setTab} options={[{ value: 'wardrobe', label: t('Wardrobe') }, { value: 'shop', label: t('Shop') }]} />

@@ -63,6 +63,32 @@ describe('capybara', () => {
     expect(b.happy).toBeLessThan(a.happy)
   })
 
+  it('faints at the end of the second week in a row under 75 % — not before, at 50 % or at 0 %', () => {
+    for (const keep of [(w, k) => w < 3 || k < 2, (w) => w < 3]) {       // 50 % / nothing, from week 4
+      const S = state([1, 2, 4, 6], 6, keep)
+      expect(petStatus(S, lastDay(3)).fainted).toBe(false)               // 3 good weeks
+      const w4 = petStatus(S, lastDay(4))
+      expect(w4.fainted).toBe(false)                                     // one failed week: not yet
+      expect(['hungry', 'tired']).toContain(w4.mood)
+      expect(petStatus(S, addDays(lastDay(5), -1)).fainted).toBe(false)  // Saturday of the 2nd
+      expect(petStatus(S, lastDay(5)).fainted).toBe(true)                // Sunday of the 2nd: faints
+    }
+  })
+
+  it('a good week in between resets the count', () => {
+    const S = state([1, 2, 4, 6], 6, (w, k) => w === 1 || w === 3 || w === 5 ? k < 2 : true)   // bad, good, bad…
+    for (let w = 1; w <= 6; w++) expect(petStatus(S, lastDay(w)).fainted).toBe(false)
+  })
+
+  it('the partial week of its birth is judged only on the days since', () => {
+    // Born on a Friday: that week only has Friday and Saturday planned, both done.
+    const S = { ...state([1, 2, 4, 6], 3), pet: newPet('2026-08-07') }
+    // …and the second week fails completely. Judged on the whole first week (1 of 4) it would
+    // be a second failed week in a row and faint; judged fairly it is only the first.
+    S.workouts = S.workouts.filter(w => w.d >= '2026-08-07' && w.d < '2026-08-10')
+    expect(petStatus(S, lastDay(2)).fainted).toBe(false)
+  })
+
   it('fainted, then a whole week done wakes it with everything it had (D15)', () => {
     const faint = state([1, 2, 4, 6], 10, (w, k) => k < 1)            // 25 % for 10 weeks
     faint.pet.owned = ['cap']; faint.pet.wear = { head: 'cap' }
