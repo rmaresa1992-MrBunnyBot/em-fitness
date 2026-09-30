@@ -125,3 +125,15 @@ test('a failing push does not fail the save', async () => {
   await flaky['PUT /api/trainer/diet']({ body: { athlete: 'luis', diet: diet() } }, res);
   assert.equal(res.code, 200);
 });
+
+test('the trainer gets every diet at a glance; athletes cannot', async () => {
+  assert.equal((await call('GET /api/trainer/diets', { as: 'luis' })).code, 403);
+  assert.equal((await call('GET /api/trainer/diets', {})).code, 401);
+  const r = await call('GET /api/trainer/diets', { as: 'coach' });
+  assert.equal(r.code, 200);
+  const ana = r.body.diets.ana;
+  assert.ok(ana, 'ana has a diet');
+  assert.equal(typeof ana.meals, 'number');
+  assert.ok(ana.rev >= 1);
+  assert.equal(r.body.diets.coach, undefined, 'no diet, no entry');
+});

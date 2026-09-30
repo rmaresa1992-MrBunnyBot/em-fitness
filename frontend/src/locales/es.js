@@ -711,7 +711,7 @@ export default {
   'Your trainer updated your plan': 'Tu entrenador actualizó tu plan',
   'From your trainer': 'De tu entrenador',
   // EM Fitness: diets
-  "Diet": "Dieta",
+  "Diet": "Nutrición",
   "Your trainer hasn’t sent you a diet yet.": "Tu entrenador aún no te ha enviado una dieta.",
   "Updated {0}": "Actualizada {0}",
   "Daily total": "Total del día",

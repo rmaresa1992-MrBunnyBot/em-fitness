@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useUI } from '../store/useUI.js'
 import { api } from '../lib/api.js'
 import { fmtDate } from '../lib/format.js'
@@ -60,6 +60,8 @@ export function DietSummary({ athlete, close }) {
 export default function TrainerDiet() {
   const { id } = useParams()
   const nav = useNavigate()
+  // Back to where the editor was opened from: the Nutrición tab or the athlete's sheet.
+  const backTo = new URLSearchParams(useLocation().search).get('from') === 'nutricion' ? '/nutricion' : '/admin'
   const toast = useUI(s => s.toast)
   const openSheet = useUI(s => s.openSheet)
   const [name, setName] = useState('')
@@ -86,8 +88,8 @@ export default function TrainerDiet() {
 
   const edit = fn => { setForm(f => { const n = cloneForm(f); fn(n); return n }); setDirty(true) }
   const back = () => dirty
-    ? confirmSheet({ title: '¿Salir sin enviar?', message: 'Los cambios de esta dieta se perderán.', confirmText: 'Salir', danger: true, onConfirm: () => nav('/admin') })
-    : nav('/admin')
+    ? confirmSheet({ title: '¿Salir sin enviar?', message: 'Los cambios de esta dieta se perderán.', confirmText: 'Salir', danger: true, onConfirm: () => nav(backTo) })
+    : nav(backTo)
 
   const send = () => {
     const diet = fromForm(form)

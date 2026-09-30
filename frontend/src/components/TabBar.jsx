@@ -36,6 +36,7 @@ export default function TabBar() {
           Tablero | Deportistas (Spanish on purpose, D6). No exercise library for anyone (D14). */}
       <div className="side">
         <Tab k="plan" icon="calendar" to="/plan" label={trainer ? 'Rutinas' : t('Plan')} />
+        {trainer && <Tab k="nutricion" icon="apple" to="/nutricion" label="Nutrición" />}
       </div>
       <button className={'start' + (running ? ' rec' : on('home') ? ' on' : '')} onClick={center} aria-current={on('home') ? 'page' : undefined}>
         <span className="cir"><Icon name={running ? 'play' : trainer ? 'chart' : 'house'} /></span>

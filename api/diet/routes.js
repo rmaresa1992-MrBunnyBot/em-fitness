@@ -38,6 +38,17 @@ export function dietRoutes({ json, readBody, readSession, requireAdmin, users, r
   const idParam = req => new URL(req.url, 'http://x').searchParams.get('id');
 
   return {
+    // EM Fitness: every athlete's diet at a glance, for the trainer's Nutrición screen.
+    'GET /api/trainer/diets': async (req, res) => {
+      if (!requireAdmin(req, res)) return;
+      const diets = {};
+      for (const u of users()) {
+        const d = store.read(u.id);
+        if (d) diets[u.id] = { name: d.name || '', meals: d.meals.length, kcal: d.targets?.kcal ?? null, rev: d.rev, at: d.at };
+      }
+      json(res, 200, { diets });
+    },
+
     'GET /api/trainer/diet': async (req, res) => {
       if (!requireAdmin(req, res)) return;
       const athlete = idParam(req);
