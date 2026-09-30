@@ -4,7 +4,7 @@ import { useStore, DEF, hasData } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { ACCENTS, todayISO, localTZ } from '../lib/format.js'
 import { effortOf } from '../lib/history.js'
-import { webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/api.js'
+import { api, webauthnOK, passkeyLogin, passkeyRegister, IS_ANDROID } from '../lib/api.js'
 import { pushSupported, enablePush, disablePush, sendTestPush } from '../lib/push.js'
 import { wakeLockSupported } from '../lib/wakelock.js'
 import { t, LANGS, INSTR_LANGS } from '../lib/i18n.js'
@@ -88,8 +88,13 @@ export default function Settings() {
         <Row icon="rocket" iconTint="var(--indigo)" title={t('Self-host EM Fitness')} subtitle={t('Passkey sign-in, sync across your devices, your own data.')} accessory="chevron"
           onClick={() => window.open(REPO, '_blank', 'noopener')} />
       </> : user ? <>
-        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={t('Signed in with passkey — data syncs to this profile.')} />
+        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={user.username
+          ? t('Signed in as {0} — data syncs to this profile.', user.username)
+          : t('Signed in with passkey — data syncs to this profile.')} />
         {user.admin && <Row icon="wrench" iconTint="var(--indigo)" title={t('Admin dashboard')} accessory="chevron" onClick={() => nav('/admin')} />}
+        {/* EM Fitness: only accounts with a username sign in with a password (api/auth/) */}
+        {user.username && <Row icon="key" iconTint="var(--blue)" title={t('Change password')} accessory="chevron"
+          onClick={() => useUI.getState().openSheet(close => <PasswordSheet close={close} />)} />}
         <Row icon="signOut" iconTint="var(--red)" title={t('Sign out')} danger onClick={() => confirmSheet({ title: t('Sign out?'), message: t('Your data is synced to your profile first, then cleared from this device.'), confirmText: t('Sign out'), danger: true, onConfirm: () => { signOut(); nav('/home') } })} />
         <Row icon="shield" iconTint="var(--red)" title={t('Sign out everywhere')} subtitle={t('Ends this profile’s sessions on all your devices.')} danger onClick={signOutEverywhere} />
       </> : webauthnOK() ? <>
@@ -361,4 +366,35 @@ function RegisterInline({ close, setUser, pushState, pullState, toast }) {
     <TextField ref={nameRef} placeholder={t('Your name')} maxLength={40} />
     <div style={{ height: 12 }} /><Button variant="primary" onClick={go}>{t('Create passkey')}</Button>
   </>
+}
+
+// EM Fitness: change your own password. The server signs every other device out and hands
+// this one a fresh cookie, so nothing changes here but the password.
+function PasswordSheet({ close }) {
+  const toast = useUI(s => s.toast)
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [again, setAgain] = useState('')
+  const [busy, setBusy] = useState(false)
+  const go = async e => {
+    e.preventDefault()
+    if (next.length < 8) { toast(t('The new password needs at least 8 characters')); return }
+    if (next !== again) { toast(t('The two new passwords don’t match')); return }
+    setBusy(true)
+    try {
+      await api('/api/account/password', { method: 'POST', body: JSON.stringify({ current, next }) })
+      toast(t('Password changed — other devices were signed out')); close()
+    } catch (err) { toast(err.message); setBusy(false) }
+  }
+  const field = { textTransform: 'none' }
+  return <form onSubmit={go}>
+    <h3>{t('Change password')}</h3>
+    <div className="muted small" style={{ marginBottom: 14 }}>{t('Signs you out on your other devices.')}</div>
+    <TextField type="password" autoComplete="current-password" placeholder={t('Current password')} aria-label={t('Current password')} maxLength={200} style={field} value={current} onChange={e => setCurrent(e.target.value)} />
+    <div style={{ height: 10 }} />
+    <TextField type="password" autoComplete="new-password" placeholder={t('New password')} aria-label={t('New password')} maxLength={200} style={field} value={next} onChange={e => setNext(e.target.value)} />
+    <div style={{ height: 10 }} />
+    <TextField type="password" autoComplete="new-password" placeholder={t('Repeat the new password')} aria-label={t('Repeat the new password')} maxLength={200} style={field} value={again} onChange={e => setAgain(e.target.value)} />
+    <div style={{ height: 12 }} /><Button variant="primary" type="submit" disabled={busy || !current || !next}>{t('Change password')}</Button>
+  </form>
 }

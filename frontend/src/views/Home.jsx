@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { effectiveRoutine, effectiveRoutineId, streakWeeks, lastBW, setsDoneActive } from '../lib/history.js'
@@ -13,6 +13,7 @@ import { coachAvailable, hasConsent } from '../lib/coach.js'
 import { useCoachStatus } from '../lib/coach-api.js'
 import { DEMO } from '../lib/demo.js'
 import { MOBILE } from '../lib/mobile.js'
+import { status as billingStatus, fmtMoney, STATE_COLOR } from '../lib/billing.js'
 
 // A job in flight or a proposal waiting is the only reason the Coach interrupts Home. When it
 // has nothing to say it renders nothing at all — and it only polls while Home is on screen.
@@ -39,6 +40,47 @@ function CoachCard({ nav }) {
   </div>
 }
 
+// EM Fitness: the chat with the trainer. Always there for a signed-in athlete (it's also how
+// they write first), louder with unread messages.
+function InboxCard({ nav }) {
+  const inbox = useStore(s => s.inbox)
+  if (!inbox) return null
+  const n = inbox.unread
+  return <div className="card tappable em-card" style={{ cursor: 'pointer', ...(n ? { borderColor: 'var(--acc)' } : null) }} onClick={() => nav('/messages')}>
+    <div className="row between" style={{ gap: 10 }}>
+      <div className="row" style={{ gap: 9, minWidth: 0 }}>
+        <span className="lrow-i" style={{ background: n ? 'var(--acc-fill, var(--acc))' : 'var(--surface-3)' }}><Icon name="chat" /></span>
+        <div style={{ minWidth: 0 }}>
+          <div className="lbl2">{t('Messages')}</div>
+          <div className="ttl" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'none' }}>
+            {n ? t(n === 1 ? '1 new message from your trainer' : '{0} new messages from your trainer', n)
+              : inbox.last ? inbox.last.text : t('Write to your trainer')}</div>
+        </div>
+      </div>
+      {n ? <span className="badge">{n}</span> : <Icon name="chevronRight" className="chev" />}
+    </div>
+  </div>
+}
+
+// EM Fitness: the next monthly fee, when the trainer has set one. Quiet until it's close.
+function BillingCard() {
+  const billing = useStore(s => s.billing)
+  if (!billing) return null
+  const { left, state } = billingStatus(billing.due)
+  const when = left === 0 ? t('due today') : left === 1 ? t('due tomorrow') : left > 1 ? t('due in {0} days', left)
+    : left === -1 ? t('overdue since yesterday') : t('overdue by {0} days', -left)
+  return <div className="card em-card">
+    <div className="row" style={{ gap: 9 }}>
+      <span className="lrow-i" style={{ background: state === 'ok' ? 'var(--surface-3)' : STATE_COLOR[state] }}><Icon name="money" /></span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div className="lbl2">{t('Monthly fee')}</div>
+        <div className="ttl" style={{ textTransform: 'none' }}>{fmtMoney(billing.fee)} · {fmtDate(billing.due)}</div>
+        <div className="small" style={{ color: state === 'ok' ? 'var(--label-2)' : STATE_COLOR[state], fontWeight: state === 'ok' ? 400 : 500 }}>{when}</div>
+      </div>
+    </div>
+  </div>
+}
+
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
   const nav = useNavigate()
@@ -47,6 +89,8 @@ export default function Home() {
   const config = useStore(s => s.config)
   const [weekOffset, setWeekOffset] = useState(0)
   const coachOn = coachAvailable(config, user, { demo: DEMO, mobile: MOBILE })
+  const syncInbox = useStore(s => s.syncInbox)
+  useEffect(() => { syncInbox() }, [])
 
   const today = new Date()
   const routine = effectiveRoutine(S, todayISO())
@@ -106,6 +150,7 @@ export default function Home() {
     </div>
 
     {coachOn && <CoachCard nav={nav} />}
+    {user && !user.admin && <><InboxCard nav={nav} /><BillingCard /></>}
 
     {!S.routines.length && !S.active && (
       <div className="card">

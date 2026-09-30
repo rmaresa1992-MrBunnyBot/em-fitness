@@ -98,7 +98,7 @@ export const useStore = create((set, get) => {
     localStorage.removeItem('gym_dirty')
     localStorage.removeItem(KEY)
     localStorage.removeItem(DIET_KEY)
-    set({ diet: null })
+    set({ diet: null, inbox: null, billing: null })
     persist(clone(DEF), false)
   }
 
@@ -113,6 +113,10 @@ export const useStore = create((set, get) => {
     // EM Fitness: the diet the trainer sent, or null. Not part of S — it's read-only and written
     // by someone else (see lib/diet.js). Offline copy in localStorage, tagged with its owner.
     diet: loadDiet(),
+    // EM Fitness: the chat with the trainer ({ unread, last }) and the monthly fee
+    // ({ fee, due, last }) — both server-only, fetched with the trainer's data, null until then.
+    inbox: null,
+    billing: null,
 
     // Mutate a draft of S via producer fn, then persist + schedule sync.
     update(mut, push = true) {
@@ -159,6 +163,7 @@ export const useStore = create((set, get) => {
       if (!get().user) return
       trainerAt = Date.now()
       await get().syncDiet()
+      get().syncInbox()
       let assignments
       try { ({ assignments } = await api('/api/athlete/assignments')) } catch (e) { return }
       const S = clone(get().S)
@@ -190,6 +195,16 @@ export const useStore = create((set, get) => {
         const [{ useUI }, { t }] = await Promise.all([import('./useUI.js'), import('../lib/i18n.js')])
         useUI.getState().toast(t('Your trainer updated your diet'))
       }
+    },
+
+    // EM Fitness: unread messages and the fee for Home. Offline → keep what we have. The trainer
+    // gets neither: their chat lives in the panel and they pay no fee.
+    async syncInbox() {
+      const user = get().user
+      if (!user || user.admin) return
+      const [m, b] = await Promise.allSettled([api('/api/athlete/messages?after=' + Number.MAX_SAFE_INTEGER), api('/api/athlete/billing')])
+      if (m.status === 'fulfilled') set({ inbox: { unread: m.value.unread, last: m.value.last } })
+      if (b.status === 'fulfilled') set({ billing: b.value.billing || null })
     },
 
     async signOut() {

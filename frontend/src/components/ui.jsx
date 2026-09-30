@@ -100,8 +100,10 @@ export function Segmented({ options, value, onChange, className = '' }) {
     <div className={'seg ' + className} style={{ '--n': options.length, '--i': i }}>
       <span className="seg-sel" aria-hidden="true" />
       {options.map(o => (
+        // type="button": inside a <form> (the EM Fitness login) a bare button submits it
         <button
           key={o.value}
+          type="button"
           className={o.value === value ? 'on' : ''}
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}

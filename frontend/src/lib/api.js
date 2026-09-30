@@ -38,7 +38,22 @@ const SERVER_ES = {
   'the Coach is not set up on this instance': 'El Entrenador no está configurado en este servidor',
   'the Coach is already thinking about your training': 'El Entrenador ya está analizando tu entrenamiento',
   'the Coach is resting — try again tomorrow': 'El Entrenador está descansando: inténtalo mañana',
-  'the Coach needs your go-ahead first': 'El Entrenador necesita primero tu permiso'
+  'the Coach needs your go-ahead first': 'El Entrenador necesita primero tu permiso',
+  // EM Fitness: accounts, fees and messages
+  'wrong username or password': 'Usuario o contraseña incorrectos',
+  'too many attempts — wait a few minutes': 'Demasiados intentos: espera unos minutos',
+  'this is not a trainer account': 'Esta cuenta no es de entrenador; entra por «Soy deportista»',
+  'the password needs at least 8 characters': 'La contraseña necesita al menos 8 caracteres',
+  'the current password is wrong': 'La contraseña actual no es correcta',
+  'that username is taken': 'Ese usuario ya existe',
+  'a username is required': 'Falta el nombre de usuario',
+  'invalid account': 'Revisa los datos: usuario de 3 a 32 letras, números, punto o guion, y contraseña de 8 o más',
+  'invalid fee': 'La mensualidad no es válida: revisa la cuota y la fecha',
+  'invalid payment': 'El pago no es válido',
+  'no fee set': 'Este deportista no tiene mensualidad',
+  'only the latest payment can be undone': 'Solo se puede deshacer el último pago',
+  'invalid message': 'El mensaje está vacío o es demasiado largo',
+  'no athletes to message': 'No hay deportistas a quien enviar'
 }
 export function serverMessage(msg, status) {
   if (getLang() !== 'es') return msg || ('HTTP ' + status)
@@ -103,5 +118,11 @@ export async function passkeyLogin() {
   const { cid, options } = await api('/api/login/options', { method: 'POST', body: '{}' })
   const cred = await navigator.credentials.get({ publicKey: toRequestOptions(options) })
   const res = await api('/api/login/verify', { method: 'POST', body: JSON.stringify({ cid, credential: credToJSON(cred) }) })
+  return res.user
+}
+// EM Fitness: username + password (api/auth/). `role` is the door: 'trainer' is refused by the
+// server for anyone who isn't the trainer.
+export async function passwordLogin(username, password, role) {
+  const res = await api('/api/login/password', { method: 'POST', body: JSON.stringify({ username, password, role }) })
   return res.user
 }

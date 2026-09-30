@@ -1,12 +1,13 @@
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
-import { webauthnOK, passkeyLogin, passkeyRegister, api, BIO } from '../lib/api.js'
+import { useNavigate } from 'react-router-dom'
+import { webauthnOK, passkeyLogin, passkeyRegister, passwordLogin, api, BIO } from '../lib/api.js'
 import { hasData } from '../store/useStore.js'
 import { t } from '../lib/i18n.js'
 import { DEMO, REPO } from '../lib/demo.js'
 import { useState, useRef, useEffect } from 'react'
 import Icon from '../components/Icon.jsx'
-import { Button } from '../components/ui.jsx'
+import { Button, Segmented, TextField } from '../components/ui.jsx'
 
 function RegisterSheet({ close }) {
   const { setUser, pushState, pullState } = useStore()
@@ -44,6 +45,7 @@ function RegisterSheet({ close }) {
 
 export default function Login() {
   const { setUser, pullState, setGuest } = useStore()
+  const [more, setMore] = useState(false)
   const signIn = async () => {
     try { const u = await passkeyLogin(); setUser(u); await pullState(); useUI.getState().toast(t('Welcome back, {0}', u.name)) }
     catch (e) { if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') useUI.getState().toast(e.message || t('Sign-in failed')) }
@@ -69,18 +71,78 @@ export default function Login() {
     </div>
   )
 
+  // EM Fitness: username + password first, with a door per role (api/auth/). Passkeys and the
+  // guest profile stay, folded under "Other ways in".
   return (
     <div className="narrow" style={wrap}>
       {head}
-      <div className="muted" style={{ marginBottom: 34 }}>{t('Your workouts. Your weights. Your profile.')}</div>
-      {webauthnOK() ? <>
-        <Button variant="primary" icon="person" onClick={signIn}>{t('Sign in with passkey')}</Button>
-        <div style={{ height: 10 }} />
-        <Button icon="sparkles" onClick={() => useUI.getState().openSheet(close => <RegisterSheet close={close} />)}>{t('Create new profile')}</Button>
-        <div style={{ height: 10 }} />
-      </> : <div className="card small muted" style={{ textAlign: 'left' }}>{t("This browser doesn't support passkeys — you can still use EM Fitness locally on this device.")}</div>}
-      <Button variant="ghost" className="dim" onClick={() => setGuest(true)}>{t('Continue without account')}</Button>
-      <div className="dim small" style={{ marginTop: 26, lineHeight: 1.5 }}>{t('Passkeys use {0} — no passwords.', t(BIO))}<br />{t('Each profile keeps its own plan, workouts & body weight.')}</div>
+      <div className="muted" style={{ marginBottom: 26 }}>{t('Your workouts. Your weights. Your profile.')}</div>
+      <PasswordForm />
+      <div style={{ height: 18 }} />
+      <button className="btn ghost dim sm" onClick={() => setMore(m => !m)} aria-expanded={more}>
+        {t('Other ways in')} <Icon name={more ? 'chevronUp' : 'chevronDown'} />
+      </button>
+      {more && <div className="vfade" style={{ marginTop: 10 }}>
+        {webauthnOK() ? <>
+          <Button icon="person" onClick={signIn}>{t('Sign in with passkey')}</Button>
+          <div style={{ height: 10 }} />
+          <Button icon="sparkles" onClick={() => useUI.getState().openSheet(close => <RegisterSheet close={close} />)}>{t('Create new profile')}</Button>
+          <div style={{ height: 10 }} />
+        </> : <div className="card small muted" style={{ textAlign: 'left' }}>{t("This browser doesn't support passkeys — you can still use EM Fitness locally on this device.")}</div>}
+        <Button variant="ghost" className="dim" onClick={() => setGuest(true)}>{t('Continue without account')}</Button>
+        <div className="dim small" style={{ marginTop: 16, lineHeight: 1.5 }}>{t('Passkeys use {0} — no passwords.', t(BIO))}<br />{t('Each profile keeps its own plan, workouts & body weight.')}</div>
+      </div>}
     </div>
   )
+}
+
+function PasswordForm() {
+  const { setUser, pullState } = useStore()
+  const navigate = useNavigate()
+  const [role, setRole] = useState('athlete')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const trainer = role === 'trainer'
+
+  const go = async e => {
+    e.preventDefault()
+    if (!username.trim() || !password) { useUI.getState().toast(t('Enter your username and password')); return }
+    setBusy(true)
+    try {
+      const u = await passwordLogin(username.trim(), password, role)
+      setUser(u)
+      await pullState()
+      // The trainer lands on the panel whichever door they used; everyone else on Home.
+      navigate(u.admin ? '/admin' : '/home', { replace: true })
+      useUI.getState().toast(t('Welcome back, {0}', u.name))
+    } catch (err) { useUI.getState().toast(err.message || t('Sign-in failed')); setBusy(false) }
+  }
+
+  // No card around it: the fields are white (--surface) and need the page background to show.
+  return <form onSubmit={go} style={{ textAlign: 'left' }}>
+    <Segmented value={role} onChange={setRole} options={[
+      { value: 'athlete', label: t('I’m an athlete') },
+      { value: 'trainer', label: t('I’m the trainer') }
+    ]} />
+    <div className="small muted" style={{ margin: '12px 2px 12px', minHeight: '2.6em' }}>
+      {trainer ? t('Your panel: athletes, monthly fees and messages.') : t('Your trainer gives you your username and password.')}
+    </div>
+    <TextField name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+      placeholder={t('Username')} aria-label={t('Username')} maxLength={32} value={username}
+      style={{ textTransform: 'none' }} onChange={e => setUsername(e.target.value)} />
+    <div style={{ height: 10 }} />
+    <div style={{ position: 'relative' }}>
+      <TextField name="password" type={show ? 'text' : 'password'} autoComplete="current-password"
+        placeholder={t('Password')} aria-label={t('Password')} maxLength={200} value={password}
+        style={{ textTransform: 'none', paddingRight: 48 }} onChange={e => setPassword(e.target.value)} />
+      <button type="button" className="iconbtn" onClick={() => setShow(s => !s)} aria-label={show ? t('Hide password') : t('Show password')}
+        aria-pressed={show} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, background: 'none' }}>
+        <Icon name={show ? 'lock' : 'key'} />
+      </button>
+    </div>
+    <div style={{ height: 14 }} />
+    <Button variant="primary" type="submit" icon={trainer ? 'clipboard' : 'dumbbell'} disabled={busy}>{trainer ? t('Enter the panel') : t('Sign in')}</Button>
+  </form>
 }

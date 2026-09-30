@@ -29,6 +29,8 @@ import CoachIntake from './views/CoachIntake.jsx'
 import CoachProposal from './views/CoachProposal.jsx'
 import Diet from './views/Diet.jsx'
 import TrainerDiet from './views/TrainerDiet.jsx'
+import TrainerMessages from './views/TrainerMessages.jsx'
+import Messages from './views/Messages.jsx'
 
 bindUI(useUI)   // lets the shared controls open sheets without importing the store at module scope
 
@@ -90,6 +92,8 @@ function Shell() {
               {/* EM Fitness */}
               <Route path="/diet" element={<Diet />} />
               <Route path="/admin/diet/:id" element={user?.admin ? <TrainerDiet /> : <Navigate to="/home" replace />} />
+              <Route path="/admin/messages/:id" element={user?.admin ? <TrainerMessages /> : <Navigate to="/home" replace />} />
+              <Route path="/messages" element={user && !user.admin ? <Messages /> : <Navigate to="/home" replace />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
           )}
