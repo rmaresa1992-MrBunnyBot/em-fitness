@@ -109,6 +109,25 @@ export function exLine(cfg, unit) {
   return `${n} × ${cfg.reps}${load}`
 }
 
+// EM Fitness: what set `i` of a reps exercise was prescribed ({ w, r }), from the target a
+// workout entry keeps — a drop set row by row, straight sets all alike. Null when there is no
+// target (freestyle, old workouts) or the exercise isn't logged in reps.
+export function plannedSet(target, i) {
+  if (!target || modeOf(target) !== 'reps') return null
+  const drop = schemeOf(target)
+  if (drop) return drop[i] || null
+  return target.reps > 0 ? { w: target.weight || 0, r: target.reps } : null
+}
+/** Sets done with a different weight or reps than prescribed: [{ i, set, planned }]. */
+export function deviations(entry) {
+  const out = []
+  ;(entry?.sets || []).forEach((s, i) => {
+    const p = plannedSet(entry.target, i)
+    if (s.done && p && ((p.w > 0 && (s.w || 0) !== p.w) || (s.r || 0) !== p.r)) out.push({ i, set: s, planned: p })
+  })
+  return out
+}
+
 // "10 × 30 → 15 × 20 → 20 × 10 kg"; reps alone when every set is bodyweight.
 export function fmtScheme(rows, unit) {
   if (rows.every(s => !s.w)) return rows.map(s => s.r).join(' → ')

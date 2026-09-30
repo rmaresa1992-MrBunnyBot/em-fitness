@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { t } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
+import { isAthlete } from '../lib/roles.js'
 
 export default function TabBar() {
   const nav = useNavigate()
@@ -9,7 +10,8 @@ export default function TabBar() {
   const S = useStore(s => s.S)
   const user = useStore(s => s.user)
   const isGuest = useStore(s => s.isGuest())
-  const hasDiet = useStore(s => !!s.diet)   // EM Fitness: the Diet tab exists only once there is one
+  const hasDiet = useStore(s => !!s.diet)
+  const athlete = isAthlete(user)
   if (!user && !isGuest) return null
   const cur = loc.pathname.split('/')[1] || 'home'
   const on = k => cur === k || (cur === 'history' && k === 'home') || (cur === 'settings' && k === 'home')
@@ -30,16 +32,17 @@ export default function TabBar() {
     <nav id="tabbar">
       <div className="side">
         <Tab k="plan" icon="calendar" to="/plan" label={t('Plan')} />
-        {hasDiet && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
       </div>
       <button className={'start' + (running ? ' rec' : on('home') ? ' on' : '')} onClick={center} aria-current={on('home') ? 'page' : undefined}>
         <span className="cir"><Icon name={running ? 'play' : 'house'} /></span>
         <span>{running ? t('Resume') : t('Home')}</span>
       </button>
       <div className="side">
-        {/* EM Fitness: the trainer's panel (/admin) as a tab. Admin only, Spanish on purpose (D6). */}
-        {user?.admin && <Tab k="admin" icon="clipboard" to="/admin" label="Entrenador" />}
-        <Tab k="library" icon="list" to="/library" label={t('Exercises')} />
+        {/* EM Fitness: an athlete's three tabs are Plan | Inicio | Dieta — the diet tab is always
+            there, with its empty state until the trainer sends one. The trainer gets the panel
+            (Spanish on purpose, D6). No exercise library for anyone: the plan decides (D14). */}
+        {user?.admin ? <Tab k="admin" icon="clipboard" to="/admin" label="Entrenador" />
+          : (athlete || hasDiet) && <Tab k="diet" icon="apple" to="/diet" label={t('Diet')} />}
       </div>
     </nav>
   )

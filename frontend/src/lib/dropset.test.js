@@ -69,3 +69,20 @@ describe('drop set on screen and in plans', () => {
     expect(buildSets(athlete, ex).map(s => s.w)).toEqual([30, 20, 10])
   })
 })
+
+import { plannedSet, deviations } from './history.js'
+describe('prescribed vs done', () => {
+  it('plannedSet reads straight sets, drop sets and nothing', () => {
+    expect(plannedSet({ id: '0001', sets: 3, reps: 10, weight: 40 }, 2)).toEqual({ w: 40, r: 10 })
+    expect(plannedSet(drop(), 1)).toEqual({ w: 20, r: 15 })
+    expect(plannedSet(drop(), 5)).toBeNull()
+    expect(plannedSet(null, 0)).toBeNull()
+    expect(plannedSet({ id: '0001', mode: 'time', sets: 3, sec: 45 }, 0)).toBeNull()
+  })
+  it('deviations lists only done sets that differ', () => {
+    const entry = { target: drop(), sets: [{ w: 30, r: 10, done: true }, { w: 17.5, r: 15, done: true }, { w: 10, r: 18, done: true }] }
+    expect(deviations(entry).map(d => d.i)).toEqual([1, 2])
+    expect(deviations({ target: drop(), sets: [{ w: 25, r: 10, done: false }] })).toEqual([])
+    expect(deviations({ target: { id: '0001', reps: 12, weight: 0 }, sets: [{ w: 5, r: 12, done: true }] })).toEqual([])
+  })
+})

@@ -14,6 +14,8 @@ import { useCoachStatus } from '../lib/coach-api.js'
 import { DEMO } from '../lib/demo.js'
 import { MOBILE } from '../lib/mobile.js'
 import { Progress } from './Stats.jsx'
+import { weekAdherence } from '../lib/adherence.js'
+import { isAthlete } from '../lib/roles.js'
 import { status as billingStatus, fmtMoney, STATE_COLOR } from '../lib/billing.js'
 
 // A job in flight or a proposal waiting is the only reason the Coach interrupts Home. When it
@@ -82,6 +84,27 @@ function BillingCard() {
   </div>
 }
 
+// EM Fitness: this week's adherence (D16) — the athlete's main indicator.
+function AdherenceCard({ nav }) {
+  const S = useStore(s => s.S)
+  const a = weekAdherence(S, todayISO())
+  if (!a.planned) return null
+  const pct = Math.round(a.rate * 100)
+  const color = a.rate >= 0.75 ? 'var(--st-ok)' : 'var(--st-soon)'
+  return <div className="card tappable em-card" style={{ cursor: 'pointer' }} onClick={() => nav('/plan')}>
+    <div className="row between">
+      <div>
+        <div className="lbl2">{t('This week')}</div>
+        <div className="ttl">{t('{0} of {1} workouts', a.done, a.planned)}</div>
+      </div>
+      <div style={{ fontSize: 26, fontWeight: 650, color }}>{pct}%</div>
+    </div>
+    <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-2)', overflow: 'hidden', marginTop: 10 }}>
+      <div style={{ width: pct + '%', height: '100%', borderRadius: 3, background: 'var(--acc-fill, var(--acc))', transition: 'width .4s ease' }} />
+    </div>
+  </div>
+}
+
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
   const nav = useNavigate()
@@ -90,6 +113,8 @@ export default function Home() {
   const config = useStore(s => s.config)
   const [weekOffset, setWeekOffset] = useState(0)
   const coachOn = coachAvailable(config, user, { demo: DEMO, mobile: MOBILE })
+  // EM Fitness: an athlete follows the trainer's schedule and can't rearrange it (D14).
+  const athlete = isAthlete(user)
   const syncInbox = useStore(s => s.syncInbox)
   useEffect(() => { syncInbox() }, [])
 
@@ -108,7 +133,7 @@ export default function Home() {
     const iso = isoOf(d)
     const eff = effectiveRoutineId(S, iso), ovr = S.dayPlan[iso] !== undefined, done = doneDays.has(iso)
     const dot = done ? ' done' : ovr && eff ? ' ovr' : eff ? ' plan' : ''
-    strip.push(<div key={i} className={'wday' + (iso === todayISO() ? ' today' : '')} onClick={() => dayOverrideSheet(iso)}>
+    strip.push(<div key={i} className={'wday' + (iso === todayISO() ? ' today' : '')} onClick={() => athlete ? nav('/plan') : dayOverrideSheet(iso)}>
       <div className="lbl">{t(DAYS[d.getDay()])}</div><div className="num">{d.getDate()}</div><div className={'dot' + dot} /></div>)
   }
   const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
@@ -119,7 +144,7 @@ export default function Home() {
   const bwPoints = S.bodyweight.slice(-30).map(b => ({ t: b.t || new Date(b.d).getTime(), y: b.w, d: b.d }))
 
   // today's session shown right under the week strip
-  const onToday = () => { if (S.active) nav('/workout'); else if (routine) startFlow(routine.id); else dayOverrideSheet(todayISO()) }
+  const onToday = () => { if (S.active) nav('/workout'); else if (routine) startFlow(routine.id); else if (athlete) nav('/plan'); else dayOverrideSheet(todayISO()) }
 
   return <div className="narrow">
     {/* EM Fitness: date above, greeting as the title; Settings lives in the top bar now */}
@@ -145,23 +170,31 @@ export default function Home() {
             <div className="ttl">{S.active ? t('{0} — in progress', S.active.name) : routine ? routine.name : t('Rest day')}{todayOvr && routine ? ' · ' + t('rescheduled') : ''}</div>
           </div>
         </div>
-        {S.active ? <span className="tag" style={{ color: 'var(--orange)', background: 'color-mix(in srgb,var(--orange) 16%,transparent)' }}>{t('Resume')}</span>
-          : routine ? <span className="tag acc">{t('Start')}</span>
-          : <Icon name="plus" className="chev" />}
+        {/* EM Fitness: the button below says Start/Resume now, so the row only points the way */}
+        {S.active || routine ? <Icon name="chevronRight" className="chev" />
+          : athlete ? null : <Icon name="plus" className="chev" />}
       </div>
       {/* EM Fitness: the tab bar's centre is Inicio now, so starting lives here. A rest day
           still offers a free session, as the old centre button did. */}
       <div style={{ marginTop: 12 }}>
         {S.active ? <Button variant="primary" icon="play" onClick={() => nav('/workout')}>{t('Resume')}</Button>
           : routine && routine.ex.length ? <Button variant="primary" icon="dumbbell" onClick={() => startFlow(routine.id)}>{t('Start')}</Button>
-          : <Button icon="dumbbell" onClick={() => nav('/workout')}>{t('Freestyle workout (pick as you go)')}</Button>}
+          : !athlete && <Button icon="dumbbell" onClick={() => nav('/workout')}>{t('Freestyle workout (pick as you go)')}</Button>}
       </div>
     </div>
 
     {coachOn && <CoachCard nav={nav} />}
-    {user && !user.admin && <><InboxCard nav={nav} /><BillingCard /></>}
+    {athlete && <><AdherenceCard nav={nav} /><InboxCard nav={nav} /><BillingCard /></>}
 
-    {!S.routines.length && !S.active && (
+    {athlete && !S.routines.length && !S.active && <div className="card">
+      <div className="row" style={{ gap: 10, marginBottom: 6 }}>
+        <span className="lrow-i"><Icon name="clipboard" /></span>
+        <div className="big" style={{ fontSize: 22 }}>{t('Welcome!')}</div>
+      </div>
+      <div className="muted small">{t('Your trainer is preparing your routine.')}</div>
+    </div>}
+
+    {!athlete && !S.routines.length && !S.active && (
       <div className="card">
         <div className="row" style={{ gap: 10, marginBottom: 6 }}>
           <span className="lrow-i"><Icon name="sparkles" /></span>

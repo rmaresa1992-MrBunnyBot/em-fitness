@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { exOr } from '../lib/exercises.js'
-import { effectiveRoutine, lastEntryFor, bestWeightFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, EFFORT, effortOf, stepEffort, capEffort } from '../lib/history.js'
+import { effectiveRoutine, lastEntryFor, bestWeightFor, buildSets, setsDoneActive, supersetUnits, unitOf, setLabel, modeOf, EFFORT, effortOf, stepEffort, capEffort, exLine, deviations } from '../lib/history.js'
 import { fmtNum, fmtDate, todayISO, exCount, DAYN } from '../lib/format.js'
 import { beep, vibrate } from '../lib/sound.js'
 import { t, nameOf } from '../lib/i18n.js'
@@ -11,7 +11,9 @@ import { api } from '../lib/api.js'
 import Media from '../components/Media.jsx'
 import { startFlow, exercisePicker, exConfigSheet, exerciseDetailSheet, topWeightSheet, finishWorkout, workoutCompleteSheet, confirmSheet } from '../sheets.jsx'
 import Icon from '../components/Icon.jsx'
-import { Button, Check, NumberField } from '../components/ui.jsx'
+import { Button, Check, NumberField, Segmented, TextArea } from '../components/ui.jsx'
+import { isAthlete } from '../lib/roles.js'
+import { ZONES, FB_LEVELS, fbLabel } from '../lib/feedback.js'
 import { nextPrescription, applyPrescription } from '../lib/progression.js'
 import { glyphOf } from '../lib/glyphs.js'
 
@@ -22,6 +24,7 @@ function StartChooser() {
   const todayR = effectiveRoutine(S, todayISO())
   const todayOvr = S.dayPlan[todayISO()] !== undefined
   const others = S.routines.filter(r => r !== todayR)
+  const athlete = isAthlete(useStore(s => s.user))
   return <div className="narrow">
     <div className="hdr"><div><h1>{t('Start workout')}</h1><div className="sub">{t(DAYN[new Date().getDay()])} — {todayR ? t('today is {0}', todayR.name) : t('rest day, but no one’s stopping you')}</div></div></div>
     {todayR && <div className="card" style={{ borderColor: 'var(--acc)' }}>
@@ -32,6 +35,8 @@ function StartChooser() {
       </div>
       <Button variant="primary" icon="play" onClick={() => startFlow(todayR.id)}>{t('Start {0}', todayR.name)}</Button>
     </div>}
+    {/* EM Fitness: an athlete starts what today's plan says, nothing else (D14) */}
+    {athlete ? (!todayR && <div className="empty">{t('Rest day')}</div>) : <>
     {others.length > 0 && <><h4 className="sec">{t('Other routines')}</h4>
       <div className="list">{others.map(r => <div key={r.id} className="item" onClick={() => startFlow(r.id)}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
@@ -40,6 +45,7 @@ function StartChooser() {
     <div style={{ height: 14 }} />
     <Button icon="shuffle" onClick={() => startFlow(null)}>{t('Freestyle workout (pick as you go)')}</Button>
     {!S.routines.length && <><div style={{ height: 10 }} /><Button variant="primary" onClick={() => nav('/plan')}>{t('Build a plan first')}</Button></>}
+    </>}
   </div>
 }
 
@@ -51,6 +57,40 @@ function Elapsed({ start }) {
     tick(); const iv = setInterval(tick, 1000); return () => clearInterval(iv)
   }, [start])
   return <span>{t}</span>
+}
+
+/* ---------- EM Fitness: discomfort or pain on one exercise, for the trainer ---------- */
+
+function FeedbackSheet({ entryIdx, close }) {
+  const cur = useStore(s => s.S.active?.entries[entryIdx]?.fb) || {}
+  const [lvl, setLvl] = useState(cur.lvl || 'discomfort')
+  const [zone, setZone] = useState(cur.zone || '')
+  const [note, setNote] = useState(cur.note || '')
+  const save = () => {
+    useStore.getState().update(s => {
+      const en = s.active?.entries[entryIdx]
+      if (!en) return
+      if (!lvl) delete en.fb
+      else en.fb = { lvl, ...(zone ? { zone } : {}), ...(note.trim() ? { note: note.trim().slice(0, 300) } : {}), at: Date.now() }
+    })
+    useUI.getState().toast(lvl ? t('Your trainer will see it') : t('Report removed'))
+    close()
+  }
+  return <>
+    <h3>{t('Discomfort or pain?')}</h3>
+    <div className="small muted" style={{ margin: '4px 0 12px' }}>{t('Tell your trainer so they can adjust your training.')}</div>
+    <Segmented value={lvl} onChange={setLvl} options={FB_LEVELS.map(([v, l]) => ({ value: v, label: t(l) }))} />
+    {lvl && <>
+      <h4 className="sec">{t('Where?')}</h4>
+      <div className="chips" style={{ flexWrap: 'wrap' }}>
+        {ZONES.map(z => <button key={z} className={'chip' + (zone === z ? ' on' : '')} onClick={() => setZone(zone === z ? '' : z)}>{t(z)}</button>)}
+      </div>
+      <div style={{ height: 12 }} />
+      <TextArea value={note} maxLength={300} placeholder={t('What do you feel? (optional)')} onChange={e => setNote(e.target.value)} />
+    </>}
+    <div style={{ height: 12 }} />
+    <Button variant="primary" onClick={save}>{t('Save')}</Button>
+  </>
 }
 
 /* ---------- one exercise block (reps: weight×reps · time: a held duration · cardio: duration+speed) ---------- */
@@ -69,6 +109,8 @@ function ExerciseBlock({ entryIdx, compact, onToggle, onField, onAddSet, onRemov
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.
   const plan = entry.plan
+  const devs = mode === 'reps' ? deviations(entry) : []
+  const devIdx = new Set(devs.map(d => d.i))
   const col1 = cardio ? { f: 'min', step: 1, dec: false, hd: t('Duration (min)') }
     : timed ? { f: 'sec', step: 5, dec: false, hd: t('Seconds') }
       : { f: 'w', step: 2.5, dec: true, hd: t('Weight ({0})', S.unit) }
@@ -110,6 +152,8 @@ function ExerciseBlock({ entryIdx, compact, onToggle, onField, onAddSet, onRemov
       {ex.eq && <span className="tag">{t(ex.eq)}</span>}
       {best > 0 && <span className="tag nocap">{t('Best:')} {fmtNum(best)} {S.unit}</span>}
     </div>
+    {/* EM Fitness: what the trainer prescribed, always in view */}
+    {entry.target && <div className="small" style={{ marginBottom: 4, fontWeight: 500 }}>{t('Prescribed: {0}', exLine(entry.target, S.unit))}{entry.target.rest > 0 ? ' · ' + t('Rest {0} s', entry.target.rest) : ''}</div>}
     {last && <div className="small dim" style={{ marginBottom: 4 }}>{t('Last time')} ({fmtDate(last.d)}): {last.sets.map(s => setLabel(entry.id, s, last.target)).join(', ')}</div>}
     {plan && plan.why && plan.kind !== 'off' && <div className={'progline' + (plan.kind === 'deload' ? ' warn' : '')}>
       <Icon name={plan.kind === 'up' ? 'arrowUp' : plan.kind === 'deload' ? 'arrowDown' : 'lightbulb'} />
@@ -118,7 +162,7 @@ function ExerciseBlock({ entryIdx, compact, onToggle, onField, onAddSet, onRemov
     <div className="card" style={{ marginTop: 10, marginBottom: 0 }}>
       {/* the header carries the same eff3 sizing as the rows, or the labels drift off their columns */}
       <div className={'sethead' + (col3 ? ' eff3' : '')}><span className="n-sp" /><span className="w-sp">{col1.hd}</span><span className="r-sp">{col2.hd}</span>{col3 && <span className="eff-sp">{col3.hd}</span>}{timed && <span className="ck-sp" />}<span className="ck-sp" /></div>
-      {entry.sets.map((s, i) => <div key={i} className={'setrow' + (s.done ? ' done' : '') + (col3 ? ' eff3' : '')}>
+      {entry.sets.map((s, i) => <div key={i} className={'setrow' + (s.done ? ' done' : '') + (col3 ? ' eff3' : '') + (devIdx.has(i) ? ' dev' : '')}>
         <div className="n">{i + 1}</div>
         {cell(s, i, col1, 'w')}
         {cell(s, i, col2, 'r')}
@@ -129,11 +173,20 @@ function ExerciseBlock({ entryIdx, compact, onToggle, onField, onAddSet, onRemov
           onClick={() => onStartTimed(i)}><Icon name="play" /></button>}
         <Check checked={s.done} onChange={() => onToggle(i)} />
       </div>)}
+      {/* EM Fitness: sets done off-prescription, spelled out — this is what the trainer reads */}
+      {devs.length > 0 && <div className="small" style={{ marginTop: 8, color: 'var(--st-soon)' }}>
+        {devs.map(d => <div key={d.i}>{t('Set {0}: {1} (prescribed {2})', d.i + 1, fmtNum(d.set.w || 0) + ' × ' + (d.set.r || 0), fmtNum(d.planned.w) + ' × ' + d.planned.r)}</div>)}
+      </div>}
       <div style={{ height: 8 }} />
       <div className="row">
         <Button size="sm" icon="minus" disabled={entry.sets.length <= 1} onClick={onRemoveSet}>{t('Remove set')}</Button>
         <Button size="sm" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
       </div>
+    </div>
+    <div style={{ marginTop: 8 }}>
+      <Button size="sm" icon="bolt" style={entry.fb ? { color: entry.fb.lvl === 'pain' ? 'var(--st-overdue)' : 'var(--st-soon)' } : undefined}
+        onClick={() => useUI.getState().openSheet(close => <FeedbackSheet entryIdx={entryIdx} close={close} />)}>
+        {entry.fb ? fbLabel(entry.fb) : t('Discomfort or pain?')}</Button>
     </div>
   </>
 }
@@ -144,6 +197,7 @@ function ActiveWorkout() {
   const S = useStore(s => s.S)
   const update = useStore(s => s.update)
   const { startRest, stopRest } = useUI()
+  const athlete = isAthlete(useStore(s => s.user))
   const A = S.active
   const units = supersetUnits(A.entries)
   const cur = Math.min(A.cur, Math.max(0, A.entries.length - 1))
@@ -267,12 +321,13 @@ function ActiveWorkout() {
       <Button trailingIcon="chevronRight" disabled={unitIdx < 0 || unitIdx >= units.length - 1} onClick={() => update(s => { s.active.cur = units[unitIdx + 1][0] })}>{t('Next')}</Button>
     </div>
     <div style={{ height: 10 }} />
-    <Button onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
+    {/* EM Fitness: the athlete does what the trainer planned (D14) */}
+    {!athlete && <Button onClick={() => exercisePicker(ex => exConfigSheet(ex, null, cfg => update(s => {
       const full = { ...cfg, id: ex.id }
       const plan = nextPrescription(s, full, s.routines.find(r => r.id === s.active.routineId))
       s.active.entries.push({ id: ex.id, target: { ...cfg }, plan, sets: applyPrescription(buildSets(s, full), plan) })
       s.active.cur = s.active.entries.length - 1
-    }), null, S.routines.find(r => r.id === A.routineId)))} icon="plus">{t('Add exercise')}</Button>
+    }), null, S.routines.find(r => r.id === A.routineId)))} icon="plus">{t('Add exercise')}</Button>}
     <div style={{ height: 10 }} />
     {(() => {
       const exDone = A.entries.filter(e => e.sets.length && e.sets.every(s => s.done)).length

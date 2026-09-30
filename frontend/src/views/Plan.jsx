@@ -9,6 +9,8 @@ import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { coachAvailable } from '../lib/coach.js'
 import { DEMO } from '../lib/demo.js'
 import { MOBILE } from '../lib/mobile.js'
+import { isAthlete } from '../lib/roles.js'
+import AthletePlan from './AthletePlan.jsx'
 
 export default function Plan() {
   const nav = useNavigate()
@@ -17,6 +19,8 @@ export default function Plan() {
   const config = useStore(s => s.config)
   const update = useStore(s => s.update)
   const coachOn = coachAvailable(config, user, { demo: DEMO, mobile: MOBILE })
+  // EM Fitness: an athlete follows the trainer's plan, read-only (D14).
+  if (isAthlete(user)) return <AthletePlan />
 
   const addRoutine = () => {
     const r = { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [] }
